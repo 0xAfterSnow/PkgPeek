@@ -173,10 +173,22 @@ def test_issue_body_fences_user_text():
     assert body.count("```") == 2
 
 
-def test_prefilled_issue_url_is_generated_without_a_token():
+def test_prefilled_issue_url_is_generated_without_a_token(monkeypatch):
+    """With no token but a known repo, the submitter gets a link to open."""
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     report = reports.create_report(payload())
     url = reports.prefilled_issue_url(report)
-    assert url and url.startswith("https://github.com/0xaftersnow/pkgpeek/issues/new?")
+    assert url and url.startswith("https://github.com/owner/repo/issues/new?")
+
+
+def test_no_repo_means_no_prefilled_link(monkeypatch):
+    """With nothing configured there is nothing to offer, and that is fine."""
+    monkeypatch.setenv("GITHUB_REPO", "")
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    report = reports.create_report(payload())
+    assert reports.prefilled_issue_url(report) is None
+    assert report["github_issue_url"] is None
 
 
 def test_github_is_reported_as_unconfigured_without_a_token():

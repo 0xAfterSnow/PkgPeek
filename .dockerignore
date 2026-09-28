@@ -1,0 +1,43 @@
+# Keep the build context small and the image free of local state.
+# Without this, venv/ (70 MB) and .git/ are copied into the image on every build.
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Version control
+.git/
+.gitignore
+.github/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Secrets -- never bake these into an image
+.env
+.env.*
+!.env.example
+
+# Local database. The dataset in data/detections/ IS needed; the .db is not.
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Advertiser-uploaded logos
+static/uploads/
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+.kilo/

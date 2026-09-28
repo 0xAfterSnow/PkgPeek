@@ -228,9 +228,13 @@ pytest tests/test_scanner.py -v            # one file
 pytest -q --cov=. --cov-report=term-missing # with coverage
 ```
 
-Tests must not make network calls. `tests/conftest.py` fails any test that
-reaches out, and gives you `stub_npm` / `stub_osv` to fake those responses. Node
-is optional; the client-escaping tests skip without it.
+The suite is hermetic. It sets every environment variable it cares about, so a
+`.env` containing `DATABASE_URL`, `GITHUB_TOKEN` or a Redis limiter URI cannot
+leak in through the `load_dotenv()` call in `app.py`. No test makes a network
+call — `tests/conftest.py` fails any test that reaches out and gives you
+`stub_npm` / `stub_osv` to fake those responses — and uploads go to a temporary
+directory rather than `static/uploads/`. Your local configuration cannot break
+the tests. Node is optional; the client-escaping tests skip without it.
 
 CI runs the suite on Python 3.11–3.13, against **both SQLite and PostgreSQL**,
 because a detection that behaves differently per backend is a detection you

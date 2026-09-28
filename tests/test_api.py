@@ -112,15 +112,26 @@ def valid_report(**over):
     return base
 
 
-def test_report_submission_succeeds(client, token):
+def test_report_submission_succeeds(client, token, monkeypatch):
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
     res = client.post("/api/report", json=valid_report(), headers={"X-CSRF-Token": token})
     assert res.status_code == 200
     body = res.get_json()
     assert body["success"] is True
-    # No GITHUB_TOKEN in tests, so it must offer a pre-filled link instead of
-    # pretending an issue was filed.
+    # No GITHUB_TOKEN, so it must offer a pre-filled link instead of pretending
+    # an issue was filed.
     assert body["github_integration"] is False
-    assert body["github_issue_url"].startswith("https://github.com/")
+    assert body["github_issue_url"].startswith("https://github.com/owner/repo/issues/new?")
+
+
+def test_report_submission_without_a_repo_still_succeeds(client, token):
+    """Nothing configured must not break the primary path: the review queue."""
+    res = client.post("/api/report", json=valid_report(), headers={"X-CSRF-Token": token})
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["success"] is True
+    assert body["github_issue_url"] is None
 
 
 def test_report_without_evidence_is_rejected(client, token):

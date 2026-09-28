@@ -90,9 +90,24 @@ Production:
 gunicorn wsgi:app --workers 2 --timeout 60 --bind 0.0.0.0:$PORT
 ```
 
-A `Procfile` is included for Render, Railway and Fly.io. See
-[`.env.example`](.env.example) for every setting, and the
-[contributing guide](CONTRIBUTING.md) for the full setup.
+A `Procfile` is included for Render, Railway and Fly.io, and a `Dockerfile` for
+anything container-based. See [`.env.example`](.env.example) for every setting,
+and the [contributing guide](CONTRIBUTING.md) for the full setup.
+
+### Container notes
+
+Two things that bite on hosts with a read-only or ephemeral filesystem:
+
+- `python database.py` runs at **startup**, not at build time, so a
+  `DATABASE_URL` that only exists at runtime still initialises the real database.
+  Doing it at build time would set up SQLite and leave the real one empty.
+- The healthcheck uses Python rather than curl, so the image needs no
+  `apt-get` at all — one dependency source, and one less thing to fail on a
+  slow or restricted network.
+
+`PKPEEK_DB_PATH` defaults to `/tmp/pkgpeek.db` in the image, because `/app` is
+read-only on most hosts. That is a deliberate fallback: it works, but the file
+is discarded on every redeploy, so set `DATABASE_URL` for anything real.
 
 ### ⚠ Set `DATABASE_URL` before taking paid listings
 

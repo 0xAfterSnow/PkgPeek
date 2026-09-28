@@ -1,6 +1,20 @@
 """
 Shared test fixtures.
 
+Two things make this suite hermetic, and both matter for contributors:
+
+1. Environment variables are set to explicit test values rather than inherited.
+   ``app.py`` calls ``load_dotenv()`` at import time, so a developer with a
+   configured ``.env`` (DATABASE_URL, GITHUB_TOKEN, BYTESHIP_API_KEY, a Redis
+   limiter URI, ...) would otherwise have all of it leak into the suite. Since
+   python-dotenv does not override variables that already exist, setting them
+   here wins over the .env file. Note that *popping* them is not enough: a pop
+   lets load_dotenv refill them from disk. They are set to the empty string,
+   which is falsy, so each one disables its feature exactly as "unset" would.
+
+2. Uploads go to a temporary directory, so tests never write into
+   ``static/uploads/logos/``.
+
 The environment is configured *before* importing the application, because
 ``database`` reads ``DATABASE_URL`` and ``PKPEEK_DB_PATH`` at import time. Tests
 run against a throwaway SQLite file and never touch the real one.
@@ -17,19 +31,34 @@ sys.path.insert(0, ROOT)
 
 _TMP = tempfile.mkdtemp(prefix="pkgpeek-tests-")
 
+# Set, not popped. An empty string is falsy, so each of these disables the
+# corresponding feature exactly the way "unset" would.
+os.environ["DATABASE_URL"] = ""
 os.environ["PKPEEK_DB_PATH"] = os.path.join(_TMP, "test.db")
-os.environ.pop("DATABASE_URL", None)  # force the SQLite path
 os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["ADMIN_USERNAME"] = "admin"
 os.environ["ADMIN_PASSWORD_HASH"] = (
     __import__("werkzeug.security", fromlist=["x"]).generate_password_hash("test123")
 )
+os.environ["FLASK_DEBUG"] = "false"
+os.environ["PORT"] = "5000"
+os.environ["PKPEEK_SECURE_COOKIES"] = ""
+# Must be a real backend. A developer may have LIMITER_STORAGE_URI=redis:// in
+# their .env, and the redis package is not a runtime dependency, so the Limiter
+# would raise ConfigurationError at import and take the whole suite down.
+os.environ["LIMITER_STORAGE_URI"] = "memory://"
+
+# Optional integrations stay off; tests that need them enable them explicitly.
+os.environ["GITHUB_REPO"] = ""
+os.environ["GITHUB_TOKEN"] = ""
+os.environ["BYTESHIP_API_KEY"] = ""
+os.environ["BYTESHIP_FOLDER"] = ""
+
+# The tool-listing flow *is* configured, because most of its tests are about the
+# submission lifecycle and would otherwise short-circuit on "not configured".
 os.environ["DODO_TOOL_LISTING_PAYMENT_URL"] = "https://checkout.dodopayments.com/test/abc"
 os.environ["TOOL_LISTING_PRICE"] = "$49"
 os.environ["TOOL_LISTING_DURATION_DAYS"] = "30"
-os.environ["GITHUB_REPO"] = "0xaftersnow/pkgpeek"
-# No token: report filing must degrade to a pre-filled link, not a real issue.
-os.environ.pop("GITHUB_TOKEN", None)
 
 import database  # noqa: E402
 

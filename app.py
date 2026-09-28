@@ -12,6 +12,7 @@ import os
 import secrets
 from datetime import datetime
 from functools import wraps
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from flask import (
@@ -49,12 +50,62 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 if os.environ.get("PKPEEK_SECURE_COOKIES", "").lower() in ("1", "true", "yes"):
     app.config["SESSION_COOKIE_SECURE"] = True
 
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["500 per day", "100 per hour"],
-    storage_uri=os.environ.get("LIMITER_STORAGE_URI", "memory://"),
-)
+def redact_uri(uri: str) -> str:
+    """Strip any credentials from a connection string before it is logged.
+
+    Storage URIs routinely embed a password (``redis://user:secret@host``), and
+    log files get shipped, grepped and pasted. Never log one verbatim.
+    """
+    if not uri:
+        return uri
+    try:
+        parsed = urlparse(uri)
+    except ValueError:
+        return "<unparseable>"
+    if not parsed.password and not parsed.username:
+        return uri
+    host = parsed.hostname or ""
+    if parsed.port:
+        host = f"{host}:{parsed.port}"
+    return f"{parsed.scheme}://***@{host}"
+
+
+def _build_limiter():
+    """Build the rate limiter, degrading rather than refusing to boot.
+
+    LIMITER_STORAGE_URI is optional, and a misconfigured value (say
+    redis://... without the redis package installed) used to raise at import
+    time and take the whole app down. A warning plus a fall back to in-process
+    storage is strictly better: the service starts, and the weaker limit is
+    visible in the logs.
+    """
+    storage_uri = os.environ.get("LIMITER_STORAGE_URI", "").strip() or "memory://"
+    try:
+        return Limiter(
+            get_remote_address,
+            app=app,
+            default_limits=["500 per day", "100 per hour"],
+            storage_uri=storage_uri,
+        )
+    except Exception as exc:
+        app.logger.warning(
+            "LIMITER_STORAGE_URI=%s is unusable (%s: %s). Falling back to in-process "
+            "storage. Limits will reset on restart and are per-worker. Install the "
+            "matching package, e.g. `pip install redis`, or set memory:// to silence "
+            "this.",
+            redact_uri(storage_uri),
+            type(exc).__name__,
+            exc,
+        )
+        return Limiter(
+            get_remote_address,
+            app=app,
+            default_limits=["500 per day", "100 per hour"],
+            storage_uri="memory://",
+        )
+
+
+limiter = _build_limiter()
 
 scanner = PackageScanner()
 

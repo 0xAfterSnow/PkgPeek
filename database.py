@@ -47,6 +47,14 @@ def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+class StorageError(RuntimeError):
+    """Raised when the database cannot be opened or created.
+
+    Carries an actionable message: the common cause is a read-only container
+    filesystem, which looks like an unrelated PermissionError otherwise.
+    """
+
+
 # ── Schema ─────────────────────────────────────────────────────────────────
 # Two flavours: SQLite uses AUTOINCREMENT, PostgreSQL uses SERIAL.
 #
@@ -326,8 +334,29 @@ def get_connection():
         import psycopg2
         import psycopg2.extras
         return _PGConn(psycopg2.connect(_normalised_pg_url(), cursor_factory=psycopg2.extras.RealDictCursor))
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    return _SQLiteConn(DB_PATH)
+
+    directory = os.path.dirname(DB_PATH)
+    try:
+        os.makedirs(directory, exist_ok=True)
+    except OSError as exc:
+        # Almost always a read-only container filesystem. Say what to do about
+        # it rather than surfacing a bare PermissionError from makedirs.
+        raise StorageError(
+            f"Cannot create the SQLite directory {directory!r} ({exc}). "
+            "This usually means the filesystem is read-only, which is the default "
+            "for most container hosts. Either set DATABASE_URL to a PostgreSQL "
+            "URL, or point PKPEEK_DB_PATH at a writable path such as "
+            "/tmp/pkgpeek.db. Note that a SQLite file is discarded on every "
+            "redeploy, so PostgreSQL is the right choice for real deployments."
+        ) from exc
+    try:
+        return _SQLiteConn(DB_PATH)
+    except sqlite3.OperationalError as exc:
+        raise StorageError(
+            f"Cannot open the SQLite database at {DB_PATH!r} ({exc}). "
+            "Set DATABASE_URL to a PostgreSQL URL, or point PKPEEK_DB_PATH at a "
+            "writable location."
+        ) from exc
 
 
 class _PGConn:
