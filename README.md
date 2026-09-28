@@ -109,6 +109,37 @@ Two things that bite on hosts with a read-only or ephemeral filesystem:
 read-only on most hosts. That is a deliberate fallback: it works, but the file
 is discarded on every redeploy, so set `DATABASE_URL` for anything real.
 
+### WASM / WASI targets (Wasmer)
+
+Wasmer builds for `wasix_wasm32`, which changes two things:
+
+- **No `fork()`.** Gunicorn's `--workers 2` cannot work, so `Procfile` uses
+  `--worker-class gthread --threads 4` instead: one process, four threads. That
+  is the right shape for this app anyway, since a scan blocks on the OSV.dev and
+  npm registry APIs.
+- **Wasmer may pick an ASGI server.** If its build config sets the server to
+  Uvicorn, use the `asgi.py` entry point, which serves the same Flask app over
+  ASGI without adding a hard dependency:
+
+  ```bash
+  pip install uvicorn
+  uvicorn asgi:app --host 0.0.0.0 --port $PORT
+  ```
+
+  Uvicorn is deliberately **not** in `requirements.txt`; it is only needed on
+  targets that cannot run a WSGI server.
+
+Two build details worth knowing, both of which caused real failures here:
+
+- Wasmer runs the install step **before** copying the source in, so
+  `pip install -r requirements.txt` cannot find the file. Either use the
+  committed `Dockerfile`, point the install command at a raw URL, or set
+  `DOCKERFILE = true` in the build config.
+- Wasmer's build runs `uv add`, which **requires a `pyproject.toml`**. One is
+  committed for exactly that reason, with `package = false` so `uv` does not try
+  to build a wheel. Dependencies stay in `requirements.txt`; a test asserts
+  `pyproject.toml` never duplicates them.
+
 ### ⚠ Set `DATABASE_URL` before taking paid listings
 
 The detection dataset lives in git, so it is always safe. **Everything a user

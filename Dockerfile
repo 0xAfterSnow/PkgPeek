@@ -76,6 +76,10 @@ sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('PORT','
 # SQLite and leave the real database uninitialised. Failing here is fatal on
 # purpose: better to fail to boot loudly than to serve 500s.
 #
-# $PORT is injected by the platform. Two workers; the app is I/O bound on the
-# OSV and npm APIs, so this is a reasonable default.
-CMD ["sh", "-c", "python database.py && exec gunicorn wsgi:app --workers 2 --timeout 60 --bind 0.0.0.0:${PORT:-8080}"]
+# $PORT is injected by the platform.
+#
+# gthread rather than the default sync worker: a scan blocks on the OSV.dev and
+# npm registry APIs, so threads give real concurrency for I/O-bound work, and
+# unlike --workers N they need no fork() -- which is what makes this viable on
+# WASM/WASI targets too. Raise --threads if you see CPU idle while scans queue.
+CMD ["sh", "-c", "python database.py && exec gunicorn wsgi:app --worker-class gthread --threads 4 --timeout 60 --bind 0.0.0.0:${PORT:-8080}"]

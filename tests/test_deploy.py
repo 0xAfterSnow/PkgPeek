@@ -161,6 +161,57 @@ def test_dockerfile_runs_init_before_serving(dockerfile):
     )
 
 
+# ── pyproject.toml, which Wasmer's build requires ─────────────────────────
+def test_pyproject_exists_and_is_valid_toml():
+    """Wasmer runs `uv add -r requirements.txt <server>`, which aborts with
+    "No `pyproject.toml` found" without one. That was the deployment failure."""
+    path = os.path.join(ROOT, "pyproject.toml")
+    assert os.path.exists(path), "pyproject.toml is required by the Wasmer build"
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
+        tomllib = pytest.importorskip("tomli")
+    with open(path, "rb") as fh:
+        data = tomllib.load(fh)
+    assert data["project"]["name"] == "pkgpeek"
+    assert data["tool"]["uv"]["package"] is False, (
+        "this is an application, not a library: uv must not try to build a wheel"
+    )
+
+
+def test_pyproject_does_not_duplicate_requirements():
+    """requirements.txt is the single source of truth.
+
+    Duplicating the dependency list in pyproject.toml guarantees drift; the build
+    re-reads requirements.txt, so leaving it empty is correct.
+    """
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover
+        tomllib = pytest.importorskip("tomli")
+    with open(os.path.join(ROOT, "pyproject.toml"), "rb") as fh:
+        declared = tomllib.load(fh)["project"].get("dependencies", [])
+    assert declared == [], (
+        "dependencies must stay in requirements.txt only; declaring them here too "
+        "guarantees the two drift apart"
+    )
+
+
+def test_pyproject_python_floor_matches_ci():
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # pragma: no cover
+        tomllib = pytest.importorskip("tomli")
+    with open(os.path.join(ROOT, "pyproject.toml"), "rb") as fh:
+        requires = tomllib.load(fh)["project"]["requires-python"]
+    assert "3.11" in requires
+    ci = os.path.join(ROOT, ".github", "workflows", "ci.yml")
+    with open(ci, encoding="utf-8") as fh:
+        matrix = fh.read()
+    for version in ("3.11", "3.12", "3.13"):
+        assert version in matrix, f"CI should test {version}"
+
+
 # ── Production dependencies ────────────────────────────────────────────────
 def test_production_requirements_are_installable_without_dev_extras():
     """pytest and Pillow must not be dragged into a production image."""

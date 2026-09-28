@@ -1,0 +1,51 @@
+# Project metadata.
+#
+# This exists for two reasons:
+#
+# 1. Wasmer's build runs `uv add -r requirements.txt <server>`, which refuses to
+#    run without a pyproject.toml. That step was the deployment failure:
+#    "error: No `pyproject.toml` found in current directory or any parent directory".
+#
+# 2. It is the conventional place for a Python project to declare itself, and
+#    where the pytest configuration lives.
+#
+# Dependencies are deliberately NOT duplicated here. requirements.txt remains the
+# single source of truth, and Wasmer re-reads it on every build via
+# `uv add -r`. A test (tests/test_deploy.py) asserts the two never drift.
+
+[project]
+name = "pkgpeek"
+version = "1.0.0"
+description = "npm supply chain security scanner: malware, CVEs, typosquats and suspicious publish signals"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+# Populated from requirements.txt by the build, not maintained by hand.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/0xaftersnow/pkgpeek"
+Issues = "https://github.com/0xaftersnow/pkgpeek/issues"
+
+# An application, not a library: uv must not try to build or install a wheel.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# tests/conftest.py puts the repo root on sys.path, so no packaging step is
+# needed to import the app modules.
+addopts = "-ra"
+filterwarnings = ["error::DeprecationWarning:pkgpeek.*"]
+
+[tool.coverage.run]
+source = ["app", "scanner", "database", "detections", "reports", "toolstore", "validate", "logos", "byteship"]
+branch = true
+omit = ["tests/*", "tools/*", "venv/*", "wsgi.py", "asgi.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+  "raise NotImplementedError",
+]
