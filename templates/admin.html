@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - PkgGuard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="robots" content="noindex">
+  <title>Admin — PkgPeek</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=3) }}">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <!-- Nav -->
+
   <nav>
     <a class="nav-logo" href="/">
       <div class="logo-shield">
@@ -17,7 +19,7 @@
           <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      PkgGuard Admin
+      PkgPeek Admin
     </a>
     <div class="nav-links">
       <a href="/">Back to Scanner</a>
@@ -26,103 +28,387 @@
 
   <div class="section admin-section">
     <div class="section-eyebrow">Dashboard</div>
-    <div class="section-title">Manage Tools</div>
-    
-    <div class="admin-grid">
-      <!-- Add Tool Form -->
-      <div class="admin-card">
-        <h3>Add New Tool</h3>
-        <form id="add-tool-form">
-          <div class="form-group">
-            <label>Name</label>
-            <input type="text" id="t-name" required placeholder="e.g. Snyk CLI">
-          </div>
-          <div class="form-group">
-            <label>Type Category</label>
-            <input type="text" id="t-type" required placeholder="e.g. CLI Tool">
-          </div>
-          <div class="form-group">
-            <label>Color Class</label>
-            <select id="t-cls">
-              <option value="tt-vscode">Green (tt-vscode)</option>
-              <option value="tt-cli">Yellow (tt-cli)</option>
-              <option value="tt-ci">Purple (tt-ci)</option>
-              <option value="tt-service">Red (tt-service)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>URL</label>
-            <input type="url" id="t-url" required placeholder="https://...">
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="t-desc" required rows="3" placeholder="Brief description..."></textarea>
-          </div>
-          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Add Tool</button>
-        </form>
-      </div>
+    <div class="section-title">Manage directory &amp; reports</div>
 
-      <!-- Current Tools -->
-      <div class="admin-list-wrap">
-        <h3>Current Tools</h3>
-        <div id="admin-tools-list" class="admin-tools-list">
-          <div class="hint-text">Loading tools...</div>
+    <div class="admin-tabs" style="margin-top:20px;">
+      <a href="#submissions" class="active">Tool submissions</a>
+      <a href="#reports">Package reports</a>
+      <a href="#curated">Curated tools</a>
+    </div>
+
+    <!-- ── Paid tool submissions ── -->
+    <div id="submissions" style="margin-bottom:52px;">
+      <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 6px;">Paid listings</h3>
+      {% if durability.message %}
+      <div class="notice notice-warn" style="margin:0 0 16px;">
+        <strong>⚠ Storage is not durable.</strong><br>
+        {{ durability.message }}<br>
+        Right now at risk:
+        <strong>{{ durability.submissions }}</strong> submission(s),
+        <strong>{{ durability.paid_listings }}</strong> published listing(s),
+        <strong>{{ durability.uploaded_logos }}</strong> uploaded logo(s).
+      </div>
+      {% elif not durability.durable %}
+      <div class="notice" style="margin:0 0 16px;">
+        Running on local SQLite (<code>{{ durability.path }}</code>). Nothing at risk
+        yet, but set <code>DATABASE_URL</code> to PostgreSQL before taking paid
+        listings — a redeploy on an ephemeral host will wipe this file.
+      </div>
+      {% endif %}
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
+        Payment is verified manually. Marking a submission paid is the point at
+        which you have matched the reference against the Dodo dashboard.
+        Publishing requires both an approved review and verified payment.
+        {% if payment.configured %}
+          <br>Listing fee {{ payment.price or '—' }} · {{ payment.duration_days }}-day listings.
+        {% else %}
+          <br><strong style="color:#a02020;">Checkout is not configured.</strong>
+          Set <code>DODO_TOOL_LISTING_PAYMENT_URL</code> to enable submissions.
+        {% endif %}
+      </p>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
+        Logo storage:
+        {% if storage.configured %}
+          <strong style="color:#1a6640;">Byteship</strong> ({{ storage.host }}) in
+          <code>{{ storage.folder }}/</code>
+        {% else %}
+          <strong style="color:#a04020;">local disk</strong> — set
+          <code>BYTESHIP_API_KEY</code> so uploaded logos survive a redeploy
+        {% endif %}
+      </p>
+      <div id="submissions-list">
+        <div class="hint-text">Loading submissions…</div>
+      </div>
+    </div>
+
+    <!-- ── Package reports ── -->
+    <div id="reports" style="margin-bottom:52px;">
+      <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 6px;">Package reports</h3>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
+        Community submissions and false-positive reports. Accepting a report
+        does <em>not</em> add a detection — land the dataset change in git
+        separately, and add a regression test.
+      </p>
+      <div id="reports-list">
+        <div class="hint-text">Loading reports…</div>
+      </div>
+    </div>
+
+    <!-- ── Curated tools ── -->
+    <div id="curated">
+      <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 6px;">Curated tools</h3>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin:0 0 16px;">
+        Curated tools live in <code>data/detections/tools.json</code>. Editing them
+        here works, but a pull request is the durable route.
+      </p>
+
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>Add curated tool</h3>
+          <form id="add-tool-form">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" id="t-name" required maxlength="120" placeholder="e.g. Snyk CLI">
+            </div>
+            <div class="form-group">
+              <label>Type</label>
+              <input type="text" id="t-type" required maxlength="60" placeholder="e.g. CLI Tool">
+            </div>
+            <div class="form-group">
+              <label>Accent</label>
+              <select id="t-cls">
+                <option value="tt-vscode">Mint (tt-vscode)</option>
+                <option value="tt-cli">Lemon (tt-cli)</option>
+                <option value="tt-ci">Lavender (tt-ci)</option>
+                <option value="tt-service">Peach (tt-service)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>URL</label>
+              <input type="url" id="t-url" required maxlength="500" placeholder="https://...">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="t-desc" required rows="3" maxlength="200" placeholder="Brief description..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="t-logo">Logo</label>
+              <input type="file" id="t-logo" name="logo" accept="image/png,image/jpeg,image/webp" />
+              <div class="field-hint">PNG, JPEG or WebP, up to 512&nbsp;KB. Optional — without one
+                the card shows a generated monogram.</div>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">Add tool</button>
+            <div class="form-error" id="tool-form-error"></div>
+          </form>
+        </div>
+
+        <div class="admin-list-wrap">
+          <h3>Current tools</h3>
+          <div id="admin-tools-list" class="admin-tools-list">
+            <div class="hint-text">Loading tools...</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    async function loadTools() {
-      try {
-        const res = await fetch('/api/tools');
-        const tools = await res.json();
-        const list = document.getElementById('admin-tools-list');
-        list.innerHTML = tools.map(t => `
-          <div class="admin-tool-row">
-            <div class="atr-info">
-              <div class="atr-title">${t.name} <span class="tool-type ${t.cls}">${t.type}</span></div>
-              <div class="atr-desc">${t.desc}</div>
-            </div>
-            <button class="btn-danger" onclick="deleteTool(${t.id})">Delete</button>
-          </div>
-        `).join('');
-      } catch (err) {
-        console.error(err);
-      }
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
+const esc = (v) => {
+  const d = document.createElement('div');
+  d.textContent = v === null || v === undefined ? '' : String(v);
+  return d.innerHTML;
+};
+const safeUrl = (u) => {
+  if (!u) return '';
+  try {
+    const p = new URL(u, location.origin);
+    return (p.protocol === 'http:' || p.protocol === 'https:') ? p.href : '';
+  } catch { return ''; }
+};
+const api = (url, opts = {}) => {
+  // Spread opts first, then merge headers. Reversing this silently drops the
+  // CSRF token for any call that passes its own headers object.
+  const { headers, ...rest } = opts;
+  return fetch(url, {
+    ...rest,
+    headers: { 'X-CSRF-Token': CSRF, ...(headers || {}) }
+  });
+};
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function shortDate(s) { return s ? String(s).slice(0, 10) : '—'; }
+
+// ── Submissions ──
+async function loadSubmissions() {
+  const el = document.getElementById('submissions-list');
+  try {
+    const res = await api('/api/admin/submissions');
+    const { submissions, counts } = await res.json();
+
+    if (!submissions.length) {
+      el.innerHTML = '<div class="empty-inline">No submissions yet.</div>';
+      return;
     }
 
-    async function deleteTool(id) {
-      if(!confirm("Delete this tool?")) return;
-      await fetch(`/api/tools/${id}`, { method: 'DELETE' });
-      loadTools();
-    }
+    const summary = ['pending_payment', 'pending_review', 'approved', 'published', 'rejected', 'expired']
+      .filter((s) => counts[s])
+      .map((s) => `<span class="status-pill sp-${s}">${counts[s]} ${s.replace('_', ' ')}</span>`)
+      .join('');
 
-    document.getElementById('add-tool-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const payload = {
-        name: document.getElementById('t-name').value,
-        type: document.getElementById('t-type').value,
-        cls: document.getElementById('t-cls').value,
-        url: document.getElementById('t-url').value,
-        desc: document.getElementById('t-desc').value,
-      };
-      
-      const res = await fetch('/api/tools', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      if(res.ok) {
-        e.target.reset();
-        loadTools();
-      } else {
-        alert("Failed to add tool");
-      }
+    el.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${summary}</div>` +
+      submissions.map(subCard).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty-inline">Could not load submissions: ${esc(err.message)}</div>`;
+  }
+}
+
+function subCard(s) {
+  const paid = s.payment_status === 'paid';
+  const approved = s.status === 'approved';
+  const live = s.status === 'published';
+  const url = safeUrl(s.website_url);
+  const logo = s.logo
+    ? `<div class="tool-logo"><img src="${esc(safeUrl(s.logo))}" alt=""></div>`
+    : `<div class="tool-logo tool-logo-mono" aria-hidden="true">${esc((s.tool_name || '?').charAt(0).toUpperCase())}</div>`;
+
+  const actions = [];
+  if (s.status === 'pending_review' || s.status === 'pending_payment') {
+    actions.push(`<button class="btn-mini is-primary" onclick="reviewSubmission(${s.id},'approve')">Approve</button>`);
+    actions.push(`<button class="btn-mini is-danger" onclick="reviewSubmission(${s.id},'reject')">Reject</button>`);
+  }
+  if (!paid) {
+    actions.push(`<button class="btn-mini" onclick="reviewSubmission(${s.id},'mark-paid')">Mark paid</button>`);
+  } else if (approved) {
+    actions.push(`<button class="btn-mini is-primary" onclick="reviewSubmission(${s.id},'publish')">Publish</button>`);
+  }
+  if (live) {
+    actions.push(`<button class="btn-mini is-danger" onclick="reviewSubmission(${s.id},'unpublish')">Unpublish</button>`);
+  }
+  if (paid) {
+    actions.push(`<button class="btn-mini" onclick="reviewSubmission(${s.id},'refund')">Mark refunded</button>`);
+  }
+
+  return `
+  <div class="sub-card">
+    <div class="sub-head">
+      ${logo}
+      <span class="sub-title">${esc(s.tool_name)}</span>
+      <span class="status-pill sp-${esc(s.status)}">${esc(s.status.replace('_', ' '))}</span>
+      <span class="status-pill sp-${esc(s.payment_status)}">payment: ${esc(s.payment_status)}</span>
+    </div>
+    <div class="sub-meta">
+      <div><strong>Website</strong><span>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener nofollow">${esc(s.website_url)}</a>` : esc(s.website_url)}</span></div>
+      <div><strong>Category</strong><span>${esc(s.category)}</span></div>
+      <div><strong>Email</strong><span>${esc(s.contact_email)}</span></div>
+      <div><strong>Submitted</strong><span>${esc(shortDate(s.submitted_at))}</span></div>
+      <div><strong>Expires</strong><span>${esc(shortDate(s.expires_at))}</span></div>
+      <div><strong>Payment ref</strong><span>${esc(s.payment_reference || '—')}</span></div>
+    </div>
+    <div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:6px;">${esc(s.description)}</div>
+    ${s.github_url ? `<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">GitHub: ${esc(s.github_url)}</div>` : ''}
+    ${s.documentation_url ? `<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">Docs: ${esc(s.documentation_url)}</div>` : ''}
+    ${s.twitter_url ? `<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">X: ${esc(s.twitter_url)}</div>` : ''}
+    ${s.rejection_reason ? `<div class="notice notice-warn" style="margin:10px 0 0;">Rejected: ${esc(s.rejection_reason)}</div>` : ''}
+    <div class="sub-actions">${actions.join('')}</div>
+  </div>`;
+}
+
+async function reviewSubmission(id, action) {
+  let body = {};
+  if (action === 'reject') {
+    const reason = prompt('Reason for rejection (shown to the submitter):');
+    if (!reason) return;
+    body = { reason };
+  } else if (action === 'mark-paid') {
+    const ref = prompt('Payment reference from the Dodo dashboard:');
+    if (ref === null) return;
+    body = { reference: ref };
+  } else if (!confirm(`Confirm: ${action} submission #${id}?`)) {
+    return;
+  }
+  try {
+    const res = await api(`/api/admin/submissions/${id}/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
-
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Action failed');
+    loadSubmissions();
     loadTools();
-  </script>
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// ── Reports ──
+async function loadReports() {
+  const el = document.getElementById('reports-list');
+  try {
+    const res = await api('/api/reports');
+    const reports = await res.json();
+    if (!reports.length) {
+      el.innerHTML = '<div class="empty-inline">No reports yet.</div>';
+      return;
+    }
+    el.innerHTML = reports.map(r => {
+      const issue = safeUrl(r.github_issue_url);
+      const actions = r.status === 'pending' ? `
+        <div class="sub-actions">
+          <button class="btn-mini is-primary" onclick="reviewReport(${r.id},'accepted')">Accept</button>
+          <button class="btn-mini" onclick="reviewReport(${r.id},'duplicate')">Duplicate</button>
+          <button class="btn-mini is-danger" onclick="reviewReport(${r.id},'rejected')">Reject</button>
+        </div>` : '';
+      return `
+      <div class="sub-card">
+        <div class="sub-head">
+          <span class="sub-title">${esc(r.package_name)}${r.version ? '@' + esc(r.version) : ''}</span>
+          <span class="status-pill ${r.kind === 'correction' ? 'sp-pending_review' : 'sp-pending'}">${esc(r.kind)}</span>
+          <span class="status-pill sp-${esc(r.status)}">${esc(r.status)}</span>
+        </div>
+        <div class="sub-meta">
+          <div><strong>Detection</strong><span>${esc(r.detection_type || '—')}</span></div>
+          <div><strong>Advisory</strong><span>${esc(r.advisory || '—')}</span></div>
+          <div><strong>Contact</strong><span>${esc(r.contact || 'anonymous')}</span></div>
+          <div><strong>Received</strong><span>${esc(shortDate(r.created_at))}</span></div>
+        </div>
+        ${r.reason ? `<div style="font-size:13px;color:var(--ink2);line-height:1.6;">${esc(r.reason)}</div>` : ''}
+        ${r.details ? `<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:6px;">${esc(r.details)}</div>` : ''}
+        <div style="font-size:11.5px;color:var(--muted);margin-top:8px;">
+          ${r.evidence_url ? `Evidence: <a href="${esc(safeUrl(r.evidence_url))}" target="_blank" rel="noopener nofollow">${esc(r.evidence_url)}</a><br>` : ''}
+          ${issue ? `Issue: <a href="${esc(issue)}" target="_blank" rel="noopener">#${esc(r.github_issue_number)}</a>` : ''}
+        </div>
+        ${actions}
+      </div>`;
+    }).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty-inline">Could not load reports: ${esc(err.message)}</div>`;
+  }
+}
+
+async function reviewReport(id, status) {
+  try {
+    const res = await api(`/api/reports/${id}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Action failed');
+    loadReports();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// ── Curated tools ──
+async function loadTools() {
+  try {
+    const res = await api('/api/tools');
+    const tools = await res.json();
+    const list = document.getElementById('admin-tools-list');
+    list.innerHTML = tools.map(t => `
+      <div class="admin-tool-row">
+        <div class="tool-logo ${t.logo ? '' : 'tool-logo-mono'}">
+          ${t.logo
+            ? `<img src="${esc(safeUrl(t.logo))}" alt="" onerror="this.parentNode.className='tool-logo tool-logo-mono';this.remove()">`
+            : esc((t.name || '?').charAt(0).toUpperCase())}
+        </div>
+        <div class="atr-info">
+          <div class="atr-title">${esc(t.name)}
+            <span class="tool-type ${esc(t.cls)}">${esc(t.type)}</span>
+            ${t.sponsored ? '<span class="tool-sponsored">Sponsored</span>' : ''}
+          </div>
+          <div class="atr-desc">${esc(t.desc)}</div>
+        </div>
+        <button class="btn-danger" onclick="deleteTool(${t.id})">Delete</button>
+      </div>`).join('');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function deleteTool(id) {
+  if (!confirm('Delete this tool?')) return;
+  await api(`/api/tools/${id}`, { method: 'DELETE' });
+  loadTools();
+}
+
+document.getElementById('add-tool-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errBox = document.getElementById('tool-form-error');
+  errBox.classList.remove('visible');
+
+  // FormData so the logo file is sent alongside the fields.
+  const body = new FormData();
+  body.append('name', document.getElementById('t-name').value);
+  body.append('type', document.getElementById('t-type').value);
+  body.append('cls', document.getElementById('t-cls').value);
+  body.append('url', document.getElementById('t-url').value);
+  body.append('desc', document.getElementById('t-desc').value);
+  const logo = document.getElementById('t-logo');
+  if (logo.files.length) body.append('logo', logo.files[0]);
+
+  const res = await api('/api/tools', { method: 'POST', body });
+  const data = await res.json();
+  if (res.ok) {
+    e.target.reset();
+    loadTools();
+  } else {
+    showError('tool-form-error', data.error || 'Failed to add tool');
+  }
+});
+
+loadSubmissions();
+loadReports();
+loadTools();
+</script>
 </body>
 </html>

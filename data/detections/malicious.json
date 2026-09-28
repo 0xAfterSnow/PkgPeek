@@ -1,0 +1,624 @@
+{
+  "detections": [
+    {
+      "package": "event-stream",
+      "versions": [
+        "3.3.6"
+      ],
+      "reason": "backdoor",
+      "severity": "critical",
+      "description": "Malicious code injected to steal cryptocurrency wallet credentials",
+      "cve": null,
+      "source": "npm incident 2018",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "flatmap-stream",
+      "versions": [
+        "0.1.1"
+      ],
+      "reason": "backdoor",
+      "severity": "critical",
+      "description": "Dependency of compromised event-stream, contained obfuscated payload",
+      "cve": null,
+      "source": "npm incident 2018",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ua-parser-js",
+      "versions": [
+        "0.7.29"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package that installed cryptominers and password stealers",
+      "cve": "CVE-2021-41265",
+      "source": "npm incident 2021",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ua-parser-js",
+      "versions": [
+        "0.8.0"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package that installed cryptominers and password stealers",
+      "cve": "CVE-2021-41265",
+      "source": "npm incident 2021",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ua-parser-js",
+      "versions": [
+        "1.0.0"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package that installed cryptominers and password stealers",
+      "cve": "CVE-2021-41265",
+      "source": "npm incident 2021",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "coa",
+      "versions": [
+        "2.0.3"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package injecting malware via postinstall script",
+      "cve": "CVE-2021-43469",
+      "source": "npm incident 2021",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "coa",
+      "versions": [
+        "2.0.4"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package injecting malware via postinstall script",
+      "cve": "CVE-2021-43469",
+      "source": "npm incident 2021",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "rc",
+      "versions": [
+        "1.2.9"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package injecting malware via postinstall script",
+      "cve": "CVE-2021-43492",
+      "source": "npm incident 2021",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "colors",
+      "versions": [
+        "1.4.44-liberty-2"
+      ],
+      "reason": "sabotage",
+      "severity": "high",
+      "description": "Author intentionally introduced infinite loop breaking thousands of projects",
+      "cve": null,
+      "source": "npm incident 2022",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "faker",
+      "versions": [
+        "6.6.6"
+      ],
+      "reason": "sabotage",
+      "severity": "high",
+      "description": "Author deleted package and pushed broken version intentionally",
+      "cve": null,
+      "source": "npm incident 2022",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "node-ipc",
+      "versions": [
+        "10.1.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Author added geopolitical malware wiping files on Russian/Belarusian IPs",
+      "cve": "CVE-2022-23812",
+      "source": "npm incident 2022",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "node-ipc",
+      "versions": [
+        "10.1.2"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Author added geopolitical malware wiping files on Russian/Belarusian IPs",
+      "cve": "CVE-2022-23812",
+      "source": "npm incident 2022",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "eslint-scope",
+      "versions": [
+        "3.7.2"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Compromised maintainer account injected postinstall script to steal npm credentials via Pastebin payload",
+      "cve": null,
+      "source": "npm incident 2018",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "eslint-config-eslint",
+      "versions": [
+        "5.0.2"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Compromised maintainer account injected postinstall script to steal npm credentials",
+      "cve": null,
+      "source": "npm incident 2018",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "bootstrap-sass",
+      "versions": [
+        "3.2.0.3"
+      ],
+      "reason": "backdoor",
+      "severity": "critical",
+      "description": "Remote code execution backdoor allowing arbitrary command execution via manipulated cookie",
+      "cve": null,
+      "source": "npm incident 2019",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "bootstrap-sass",
+      "versions": [
+        "3.1.2"
+      ],
+      "reason": "backdoor",
+      "severity": "critical",
+      "description": "Malicious package compromise identified by OSV",
+      "cve": "MAL-2024-1832",
+      "source": "Hacktron 2024",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "bitcoin-main-lib",
+      "versions": [],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Delivers NodeCordRAT via postinstall script to harvest browser session data and secrets",
+      "cve": null,
+      "source": "Zscaler 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "bitcoin-lib-js",
+      "versions": [],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Delivers NodeCordRAT via postinstall script to harvest browser session data and secrets",
+      "cve": null,
+      "source": "Zscaler 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "bip40",
+      "versions": [],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Wrapper dependency utilized in NodeCordRAT attack chain",
+      "cve": null,
+      "source": "Zscaler 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ldtzstxwzpntxqn",
+      "versions": [],
+      "reason": "malware",
+      "severity": "medium",
+      "description": "Wrapper package used in gxm dependency confusion payload execution",
+      "cve": null,
+      "source": "Snyk Research",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "lznfjbhurpjsqmr",
+      "versions": [],
+      "reason": "malware",
+      "severity": "medium",
+      "description": "Wrapper package used in gxm dependency confusion payload execution",
+      "cve": null,
+      "source": "Snyk Research",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@beproduct/nestjs-auth",
+      "versions": [
+        "0.1.19"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Mini Shai-Hulud worm payload stealing cloud/CI secrets and replicating via publish tokens",
+      "cve": "CVE-2026-46412",
+      "source": "GitHub Advisory",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@tanstack/react-router",
+      "versions": [
+        "1.169.8"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Compromised via GitHub Actions OIDC theft, embedded Mini Shai-Hulud worm",
+      "cve": "CVE-2026-45321",
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@tanstack/vue-router",
+      "versions": [
+        "1.169.8"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Compromised via GitHub Actions OIDC theft, embedded Mini Shai-Hulud worm",
+      "cve": "CVE-2026-45321",
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@tanstack/solid-router",
+      "versions": [
+        "1.169.8"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Compromised via GitHub Actions OIDC theft, embedded Mini Shai-Hulud worm",
+      "cve": "CVE-2026-45321",
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@tanstack/react-start",
+      "versions": [
+        "1.167.71"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Compromised via GitHub Actions OIDC theft, embedded Mini Shai-Hulud worm",
+      "cve": "CVE-2026-45321",
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@tanstack/setup",
+      "versions": [
+        "1.0.0"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Phantom dependency injected into TanStack ecosystem to execute Bun payload via prepare hook",
+      "cve": null,
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@tallyui/components",
+      "versions": [
+        "1.0.3"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Compromised package acting as delivery vector for Shai-Hulud payload",
+      "cve": null,
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "axios",
+      "versions": [
+        "1.14.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package pulling plain-crypto-js RAT dropper (Lazarus Group)",
+      "cve": "CVE-2026-X",
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "axios",
+      "versions": [
+        "0.30.4"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package pulling plain-crypto-js RAT dropper (Lazarus Group)",
+      "cve": "CVE-2026-X",
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "plain-crypto-js",
+      "versions": [
+        "4.2.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Phantom dependency acting as a cross-platform RAT dropper for WAVESHAPER backdoor",
+      "cve": null,
+      "source": "npm incident 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@redhat-cloud-services/chrome",
+      "versions": [
+        "2.3.4"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Miasma credential-stealing worm injected via hijacked CI/CD pipeline",
+      "cve": null,
+      "source": "Miasma campaign 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@redhat-cloud-services/frontend-components",
+      "versions": [
+        "7.7.5"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Miasma credential-stealing worm injected via hijacked CI/CD pipeline",
+      "cve": null,
+      "source": "Miasma campaign 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@redhat-cloud-services/frontend-components-testing",
+      "versions": [
+        "1.2.4"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Miasma credential-stealing worm injected via hijacked CI/CD pipeline",
+      "cve": null,
+      "source": "Miasma campaign 2026",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "chalk",
+      "versions": [
+        "5.6.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "debug",
+      "versions": [
+        "4.4.2"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ansi-styles",
+      "versions": [
+        "6.2.2"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "supports-color",
+      "versions": [
+        "10.2.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ansi-regex",
+      "versions": [
+        "6.2.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "color-convert",
+      "versions": [
+        "3.1.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "wrap-ansi",
+      "versions": [
+        "9.0.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "strip-ansi",
+      "versions": [
+        "7.1.1"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing crypto-stealing browser malware hooking Web3 APIs",
+      "cve": null,
+      "source": "npm incident 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@duckdb/duckdb-wasm",
+      "versions": [
+        "1.29.2"
+      ],
+      "reason": "malware",
+      "severity": "critical",
+      "description": "Hijacked package containing browser-based crypto-stealer",
+      "cve": null,
+      "source": "Veracode 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "executable-stories-react",
+      "versions": [
+        "0.1.7"
+      ],
+      "reason": "malware",
+      "severity": "high",
+      "description": "Miasma supply chain worm artifact targeting UI testing frameworks",
+      "cve": null,
+      "source": "OX Security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "autotel-playwright",
+      "versions": [
+        "0.4.32"
+      ],
+      "reason": "malware",
+      "severity": "high",
+      "description": "Miasma supply chain worm artifact targeting frontend testing",
+      "cve": null,
+      "source": "OX Security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    }
+  ]
+}

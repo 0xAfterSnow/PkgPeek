@@ -4,11 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PkgGuard — npm Supply Chain Scanner</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <title>PkgPeek — npm Supply Chain Scanner</title>
 
   <!-- SEO Meta Tags -->
   <meta name="description"
-    content="Catch malicious packages before they ship. PkgGuard is a free npm supply chain scanner checking for malware, CVEs, typosquats, and suspicious signals." />
+    content="Catch malicious packages before they ship. PkgPeek is a free npm supply chain scanner checking for malware, CVEs, typosquats, and suspicious signals." />
   <meta name="keywords"
     content="npm scanner, supply chain security, malware detection, CVE, typosquatting, cybersecurity, developer tools, node.js security" />
   <meta name="author" content="Aftersnow" />
@@ -18,7 +19,7 @@
   <meta name="googlebot" content="index, follow" />
 
   <!-- Open Graph / Social -->
-  <meta property="og:title" content="PkgGuard — npm Supply Chain Scanner" />
+  <meta property="og:title" content="PkgPeek — npm Supply Chain Scanner" />
   <meta property="og:description"
     content="Catch malicious packages before they ship. Protect your project from known malware, live CVE advisories, and typosquats." />
   <meta property="og:type" content="website" />
@@ -26,7 +27,7 @@
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="PkgGuard — npm Supply Chain Scanner" />
+  <meta name="twitter:title" content="PkgPeek — npm Supply Chain Scanner" />
   <meta name="twitter:description"
     content="Catch malicious packages before they ship. Protect your project from known malware, live CVE advisories, and typosquats." />
   <meta name="twitter:image" content="{{ url_for('static', filename='og-image.png', _external=True) }}" />
@@ -40,7 +41,7 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "PkgGuard",
+    "name": "PkgPeek",
     "description": "A supply chain security scanner for npm packages to detect malware, typosquats, and CVEs.",
     "applicationCategory": "SecurityApplication",
     "operatingSystem": "All",
@@ -58,7 +59,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,700&family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap"
     rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=2) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=3) }}">
 </head>
 
 <body>
@@ -75,11 +76,13 @@
               stroke-linejoin="round" />
           </svg>
         </div>
-        PkgGuard
+        PkgPeek
       </a>
       <div class="nav-links">
         <a href="#scanner">Scanner</a>
         <a href="#tools">Tools</a>
+        <a href="/report">Report a package</a>
+        <a href="/contribute">Contribute</a>
         <a href="https://osv.dev" target="_blank" rel="noopener">OSV DB</a>
       </div>
       <div class="nav-right" style="display: flex; align-items: center; gap: 8px;">
@@ -143,7 +146,7 @@
         <div class="fcard fcard-4">
           <div class="fcard-label">Data sources</div>
           <div class="pkg-row">
-            <span class="pkg-row-name">PkgGuard DB</span>
+            <span class="pkg-row-name">PkgPeek DB</span>
             <span class="pkg-row-badge" style="background:#d0f0e2;color:#1a9e5f;">Active</span>
           </div>
           <div class="pkg-row">
@@ -252,7 +255,7 @@
           <div class="loader-msg" id="loader-msg">Initializing scan…</div>
           <div class="loader-steps">
             <div class="lstep" id="lstep-db">
-              <div class="lstep-dot"></div> Local DB
+              <div class="lstep-dot"></div> PkgPeek DB
             </div>
             <div class="lstep" id="lstep-osv">
               <div class="lstep-dot"></div> OSV
@@ -321,6 +324,9 @@
         <span class="section-label-text">Security Arsenal</span>
         <span class="section-label-pill" style="background:var(--lavender);color:#5030a0;">Integrations</span>
       </div>
+      <!-- CTA pricing data, read by main.js when it renders the "list your tool" card -->
+      <div id="tools-cta-data" data-open="{{ '1' if payment.configured else '0' }}"
+        data-price="{{ payment.price or '' }}" data-days="{{ payment.duration_days }}" hidden></div>
       <div class="tools-grid fade-up d1" id="tools-main"></div>
     </div>
   </div>
@@ -328,7 +334,9 @@
   <!-- Footer -->
   <footer>
     <div style="text-align: center; color: var(--text-light); font-size: 13px;">
-      © 2026 PkgGuard · Developed by <a href="javascript:void(0)" onclick="openDevModal()"
+      © {{ year }} PkgPeek · MIT licensed · <a href="/contribute">Contribute</a> ·
+      <a href="/report">Report a package</a> · Developed by <a href="javascript:void(0)"
+        onclick="openDevModal()"
         style="font-weight: 600; color: var(--ink); text-decoration: underline; text-decoration-color: rgba(0,0,0,0.2); text-underline-offset: 2px;">Aftersnow</a>
     </div>
   </footer>
@@ -377,7 +385,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
-  <script src="{{ url_for('static', filename='main.js', v=2) }}"></script>
+  <script src="{{ url_for('static', filename='main.js', v=3) }}"></script>
 </body>
 
 </html>

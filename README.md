@@ -1,234 +1,204 @@
-# 🛡 PkgGuard
+<div align="center">
 
-**npm Supply Chain Security Scanner**
+# 🛡 PkgPeek
 
-PkgGuard scans your `package.json` against multiple threat intelligence sources in real-time — flagging known malware, CVE vulnerabilities, typosquatted packages, and suspicious publish signals. For every flagged package it suggests the **exact safe version** to upgrade to, sourced directly from OSV advisory data.
+**npm supply chain security scanner**
 
----
+Paste your `package.json`, get every dependency checked against known malware,
+live CVE advisories, typosquat patterns and suspicious publish signals — with
+the evidence behind every finding.
 
-## Features
+[![CI](https://github.com/0xaftersnow/pkgpeek/actions/workflows/ci.yml/badge.svg)](https://github.com/0xaftersnow/pkgpeek/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- **Known malware / backdoor DB** — curated internal database of real-world npm supply chain attacks
-- **OSV advisory integration** — live query against Google's Open Source Vulnerability database for CVEs
-- **Typosquat detection** — fuzzy similarity engine against ~50 high-profile npm targets
-- **npm metadata checks** — flags newly published packages, single-maintainer packages, and abnormal publish velocity
-- **Smart suggestions** — for vulnerable packages, suggests the minimum patched version from OSV; for typosquats, resolves the legitimate package name; warns if latest is also compromised
-- **Admin panel** — password-protected panel to manage the tools directory (add/remove entries)
+</div>
 
 ---
 
-## Project Structure
+## Why this exists
+
+Most "is my dependency safe" tools are a thin wrapper over `npm audit`, which
+only knows about CVEs. The attacks that actually cost people their credentials —
+the ones that run code on `npm install` — do not have a CVE number. Those
+land in a curated dataset, and PkgPeek is built so that dataset is public,
+editable, and reviewable.
+
+Three things make it different from a scanner you'd normally point at:
+
+- **Every finding is auditable.** Not "❌ Malicious", but the source, the
+  evidence link, when it was recorded, and exactly which versions are affected.
+- **Anyone can improve it.** Detections are JSON in a public repository. Fixing
+  a false positive is a pull request plus a regression test.
+- **Submissions are never trusted automatically.** Reports go to a review
+  queue. Nobody can mark `react` as critical with a text box.
+
+## How it works
 
 ```
-pkguard/
-├── app.py          # Flask routes & API endpoints
-├── scanner.py      # Core scan engine (OSV, typosquat, npm meta, suggestions)
-├── database.py     # SQLite schema, seed data, connection helpers
-├── data/
-│   └── pkguard.db  # Auto-created SQLite database
-├── static/
-│   ├── main.js     # Frontend logic (scan, render, copy-to-clipboard)
-│   └── style.css   # UI styles
-├── templates/
-│   ├── index.html  # Main scanner UI
-│   └── admin.html  # Admin panel
-├── .env            # Secrets (not committed)
-└── venv/           # Python virtual environment
+package.json
+     │
+     ▼
+┌──────────────────────────────────────────┐
+│  4 independent checks, per dependency    │
+├──────────────────────────────────────────┤
+│  1  PkgPeek dataset   (data/detections)  │  known malware, CVEs, typosquats
+│  2  OSV.dev           (live API)         │  upstream advisories + fixed version
+│  3  Typosquat engine  (local)            │  name similarity vs 70 known targets
+│  4  npm Registry      (live API)         │  age, maintainers, publish velocity
+└──────────────────────────────────────────┘
+     │
+     ▼
+  risk score 0–100  +  a suggested fix
 ```
 
----
+For anything flagged, PkgPeek resolves a concrete next step rather than leaving
+you to work it out:
 
-## Requirements
+| Situation                    | Suggestion                                          |
+| ---------------------------- | --------------------------------------------------- |
+| Vulnerable version           | The exact minimum patched version from the advisory  |
+| Typosquat                    | `npm uninstall <bad> && npm install <real>`           |
+| Package missing from npm     | "Did you mean X?" (83% match)                        |
+| Latest is also compromised   | "Remove this package"                                |
+| Already on latest            | "Await upstream patch"                               |
 
-- Python 3.11+
-- pip
-
----
-
-## Setup & Running
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/0xaftersnow/pkguard.git
-cd pkguard
-```
-
-### 2. Create and activate a virtual environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate        # Linux / macOS
-# venv\Scripts\activate         # Windows
-```
-
-### 3. Install dependencies
-
-```bash
-pip install flask werkzeug requests python-dotenv
-```
-
-### 4. Configure environment variables
-
-Create a `.env` file in the project root (use `.env.example` as a template):
-
-```bash
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH=<your_hash>
-SECRET_KEY=<your_secret_key>
-FLASK_DEBUG=false
-PORT=5000
-```
-
-Generate values:
-
-```bash
-# Password hash
-python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('yourpassword'))"
-
-# Secret key
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-### 5. Run — development
-
-```bash
-python app.py
-```
-
-App starts at **http://localhost:5000**. The SQLite database is created and seeded automatically on first run.
-
-### 6. Run — production (gunicorn)
-
-```bash
-gunicorn wsgi:app --workers 2 --timeout 60 --bind 0.0.0.0:5000
-```
-
----
-
-## Deploying to Render / Railway / Fly.io
-
-All three platforms support `Procfile`-based deployments. The repo includes a ready-made `Procfile`:
-
-```
-web: gunicorn wsgi:app --workers 2 --timeout 60 --bind 0.0.0.0:$PORT
-```
-
-### Render (recommended — free tier available)
-
-1. Push the repo to GitHub
-2. New Web Service → connect your repo
-3. **Build command:** `pip install -r requirements.txt`
-4. **Start command:** `gunicorn wsgi:app --workers 2 --timeout 60 --bind 0.0.0.0:$PORT`
-5. Add environment variables in the Render dashboard:
-   - `ADMIN_USERNAME`
-   - `ADMIN_PASSWORD_HASH`
-   - `SECRET_KEY`
-
-> **Note:** Render's free tier has an ephemeral filesystem — the SQLite DB resets on redeploy. For persistent storage, mount a Render Disk (paid) or swap to a hosted Postgres with the SQLite schema migrated.
-
-### Railway
-
-1. Push to GitHub → New Project → Deploy from GitHub
-2. Add the env vars under **Variables**
-3. Railway auto-detects the `Procfile`
-
-### Self-hosted (VPS / Ubuntu)
-
-```bash
-# Install nginx + certbot for HTTPS
-sudo apt install nginx certbot python3-certbot-nginx
-
-# Run gunicorn as a systemd service (see /etc/systemd/system/pkguard.service)
-# Then proxy via nginx on port 80/443
-```
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/api/scan` | No | Scan a `package.json`. Body: `{"packageJson": "<json string>"}` |
-| `GET` | `/api/stats` | No | Returns DB stats (total threats, critical count, typosquat targets) |
-| `GET` | `/api/tools` | No | List all tools in the security arsenal |
-| `POST` | `/api/tools` | ✅ | Add a new tool. Fields: `type, cls, name, desc, url` |
-| `DELETE` | `/api/tools/<id>` | ✅ | Remove a tool by ID |
-
-### Scan request example
+## Try it
 
 ```bash
 curl -X POST http://localhost:5000/api/scan \
   -H "Content-Type: application/json" \
-  -d '{"packageJson": "{\"dependencies\":{\"lodash\":\"4.17.15\",\"axios\":\"0.21.0\"}}"}'
+  -d '{"packageJson": "{\"dependencies\":{\"lodash\":\"4.17.15\",\"mongose\":\"1.0.0\"}}"}'
 ```
 
-### Scan response shape
+## Quick start
 
-```json
-{
-  "summary": {
-    "total_packages": 2,
-    "safe": 0,
-    "flagged": 2,
-    "by_severity": { "critical": 0, "high": 0, "medium": 2, "low": 0 },
-    "risk_score": 16
-  },
-  "direct": [
-    {
-      "name": "lodash",
-      "version": "4.17.15",
-      "safe": false,
-      "max_severity": "medium",
-      "flags": [ { "type": "vulnerability", "severity": "medium", "title": "...", ... } ],
-      "suggestion": {
-        "name": "lodash",
-        "version": "4.17.21",
-        "reason": "Minimum patched version per OSV advisory",
-        "install": "npm install lodash@4.17.21",
-        "warning": false
-      }
-    }
-  ],
-  "indirect": [],
-  "scanned_at": "2026-06-12T14:00:00+00:00"
-}
+```bash
+git clone https://github.com/0xaftersnow/pkgpeek.git
+cd pkgpeek
+
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+
+cp .env.example .env      # add a SECRET_KEY
+python database.py        # create + seed the database
+python app.py             # http://localhost:5000
 ```
 
----
+Production:
 
-## Suggestion Logic
+```bash
+gunicorn wsgi:app --workers 2 --timeout 60 --bind 0.0.0.0:$PORT
+```
 
-For each flagged package, PkgGuard resolves a suggestion using this priority chain:
+A `Procfile` is included for Render, Railway and Fly.io. See
+[`.env.example`](.env.example) for every setting, and the
+[contributing guide](CONTRIBUTING.md) for the full setup.
 
-1. **Typosquat** → resolves the legitimate package name via fuzzy match against the targets list
-2. **Not found** → fuzzy-matches the name against known legitimate packages
-3. **Vulnerability / malware / backdoor / sabotage**:
-   - OSV `fixed` version (exact minimum patched version from the advisory)
-   - → fallback: npm `dist-tags.latest`
-   - → if latest is also flagged in the DB: **warning** — "Latest is also compromised, remove this package"
-   - → if already on latest: **warning** — "Await upstream patch or find an alternative"
+### ⚠ Set `DATABASE_URL` before taking paid listings
 
----
+The detection dataset lives in git, so it is always safe. **Everything a user
+submits is not.** Package reports and tool listings go to the database, and
+uploaded logos go to `static/uploads/logos/`. With the default local SQLite
+those live in `data/pkguard.db` and on disk — which is fine locally, and
+**destroyed on every redeploy** on any host with an ephemeral filesystem
+(Render, Railway, Fly.io, most container platforms).
 
-## Admin Panel
+That means losing pending submissions, published paid listings, their logos, and
+customers' email addresses. Set `DATABASE_URL` to a managed PostgreSQL instance
+before you enable `/submit-tool`. The admin panel shows a warning banner when
+user data is sitting in non-durable storage, and `GET /admin/storage` reports
+the same as JSON:
 
-Navigate to `/admin` in your browser. You will be prompted for HTTP Basic Auth credentials matching `ADMIN_USERNAME` and `ADMIN_PASSWORD_HASH` from your `.env`.
+```bash
+DATABASE_URL=postgresql://user:pass@host:5432/pkgpeek
+```
 
-From the admin panel you can add and remove entries from the **Security Arsenal** tools directory shown on the homepage.
+Uploaded logos are the other half of this. Set `BYTESHIP_API_KEY` and they go to
+[Byteship](https://byteship.dev) and are served from its CDN, so they survive a
+redeploy too:
 
----
+```bash
+BYTESHIP_API_KEY=bship_...   # needs the files:write scope
+BYTESHIP_FOLDER=pkgpeek/logos
+```
 
-## Data Sources
+Unset, they fall back to `static/uploads/logos/` — fine locally, gone on
+redeploy in production.
 
-| Source | What it checks |
-|--------|----------------|
-| PkgGuard DB | Known malware, backdoors, hijacked packages, typosquats |
-| [OSV.dev](https://osv.dev) | Live CVE / GitHub Advisory data |
-| [npm Registry](https://registry.npmjs.org) | Package age, maintainer count, publish velocity, latest version |
+## Project layout
 
----
+```
+pkgpeek/
+├── app.py            # Flask routes, auth, CSRF, rate limiting
+├── scanner.py        # the four checks + the suggestion engine
+├── detections.py     # read access to the dataset
+├── database.py       # connections, schema, migrations, dataset sync
+├── reports.py        # package reports + false-positive queue
+├── toolstore.py      # tool directory + paid listing lifecycle
+├── logos.py          # logo storage: curated vs uploaded, path rules
+├── byteship.py       # Byteship client for advertiser-uploaded logos
+├── validate.py       # one place for all untrusted-input rules
+├── tools/            # maintainer scripts (generate + repair logos)
+├── data/detections/  # ← the source of truth, edit this in a PR
+│   ├── malicious.json
+│   ├── vulnerabilities.json
+│   ├── typosquats.json
+│   ├── suspicious.json
+│   └── tools.json
+├── templates/        # index, report, contribute, submit-tool, admin
+├── static/           # main.js, style.css, service worker
+└── tests/            # 168 tests
+```
 
-## License
+The database is a **cache**. `data/detections/*.json` is the source of truth,
+rebuilt into the tables on every start. Adding a detection means editing a JSON
+file — there is no migration to write.
 
-MIT © [Aftersnow](https://aftersnow.xyz)
+## Contributing
+
+Detection or code, both welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for how
+detections are evaluated, how severity is assigned, and what evidence is
+required.
+
+```bash
+pytest -q                       # 168 tests, no network required
+python database.py              # validate the dataset
+```
+
+CI runs the suite on Python 3.11–3.13 against both SQLite and PostgreSQL.
+
+## Data sources
+
+| Source                        | What it covers                                     |
+| ----------------------------- | -------------------------------------------------- |
+| `data/detections/*.json`      | Known malware, backdoors, hijacks, typosquats, dependency confusion |
+| [OSV.dev](https://osv.dev)    | Live upstream advisories and minimum fixed versions |
+| [npm Registry](https://registry.npmjs.org) | Publish age, maintainer count, publish velocity |
+
+## API
+
+| Method   | Endpoint                        | Auth | Purpose                        |
+| -------- | ------------------------------- | ---- | ------------------------------ |
+| `POST`   | `/api/scan`                     | —    | Scan a `package.json`          |
+| `GET`    | `/api/stats`                    | —    | Dataset totals                 |
+| `GET`    | `/api/community`                | —    | Contribution statistics        |
+| `GET`    | `/api/tools`                    | —    | Live tool directory            |
+| `POST`   | `/api/report`                   | —    | Report a package / false positive |
+| `POST`   | `/api/tool-submissions`         | —    | Submit a paid listing          |
+| `GET`    | `/api/reports`                  | ✅    | Review queue                   |
+| `GET`    | `/api/admin/submissions`        | ✅    | Listing queue                  |
+| `POST`   | `/api/tools`                    | ✅    | Add a curated tool             |
+| `DELETE` | `/api/tools/<id>`               | ✅    | Remove a curated tool          |
+
+✅ = HTTP Basic auth. All mutating endpoints require a CSRF token.
+
+## Security
+
+Please don't file security bugs as public issues — see
+[SECURITY.md](SECURITY.md), which also documents how each untrusted input
+surface is handled.
+
+## Licence
+
+MIT © [Aftersnow](https://aftersnow.xyz) · [Contributing](CONTRIBUTING.md) ·
+[Code of conduct](CODE_OF_CONDUCT.md)

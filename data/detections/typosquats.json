@@ -1,0 +1,543 @@
+{
+  "_comment": "targets = legitimate package names that typosquats imitate. detections = confirmed malicious typosquat packages.",
+  "targets": [
+    {
+      "name": "@tanstack/react-router",
+      "category": "routing"
+    },
+    {
+      "name": "@tanstack/vue-router",
+      "category": "routing"
+    },
+    {
+      "name": "angular",
+      "category": "frontend"
+    },
+    {
+      "name": "astro",
+      "category": "build"
+    },
+    {
+      "name": "axios",
+      "category": "http"
+    },
+    {
+      "name": "babel",
+      "category": "build"
+    },
+    {
+      "name": "babel-cli",
+      "category": "build"
+    },
+    {
+      "name": "chai",
+      "category": "testing"
+    },
+    {
+      "name": "chalk",
+      "category": "cli"
+    },
+    {
+      "name": "class-variance-authority",
+      "category": "styling"
+    },
+    {
+      "name": "classnames",
+      "category": "styling"
+    },
+    {
+      "name": "commander",
+      "category": "cli"
+    },
+    {
+      "name": "core-js",
+      "category": "polyfill"
+    },
+    {
+      "name": "cors",
+      "category": "middleware"
+    },
+    {
+      "name": "cross-env",
+      "category": "build"
+    },
+    {
+      "name": "cypress",
+      "category": "testing"
+    },
+    {
+      "name": "d3",
+      "category": "visualization"
+    },
+    {
+      "name": "date-fns",
+      "category": "utility"
+    },
+    {
+      "name": "debug",
+      "category": "utility"
+    },
+    {
+      "name": "discord.js",
+      "category": "api"
+    },
+    {
+      "name": "dotenv",
+      "category": "config"
+    },
+    {
+      "name": "electron",
+      "category": "desktop"
+    },
+    {
+      "name": "eslint",
+      "category": "tooling"
+    },
+    {
+      "name": "ethereum",
+      "category": "blockchain"
+    },
+    {
+      "name": "got",
+      "category": "http"
+    },
+    {
+      "name": "graphql",
+      "category": "api"
+    },
+    {
+      "name": "immer",
+      "category": "state-management"
+    },
+    {
+      "name": "inquirer",
+      "category": "cli"
+    },
+    {
+      "name": "jest",
+      "category": "testing"
+    },
+    {
+      "name": "jquery",
+      "category": "dom"
+    },
+    {
+      "name": "lodash",
+      "category": "utility"
+    },
+    {
+      "name": "lucide-react",
+      "category": "icons"
+    },
+    {
+      "name": "mkdirp",
+      "category": "filesystem"
+    },
+    {
+      "name": "mobx",
+      "category": "state-management"
+    },
+    {
+      "name": "mocha",
+      "category": "testing"
+    },
+    {
+      "name": "moment",
+      "category": "utility"
+    },
+    {
+      "name": "mongoose",
+      "category": "database"
+    },
+    {
+      "name": "next",
+      "category": "frontend"
+    },
+    {
+      "name": "node-fetch",
+      "category": "http"
+    },
+    {
+      "name": "nuxt",
+      "category": "frontend"
+    },
+    {
+      "name": "playwright",
+      "category": "testing"
+    },
+    {
+      "name": "postcss",
+      "category": "styling"
+    },
+    {
+      "name": "preact",
+      "category": "frontend"
+    },
+    {
+      "name": "prettier",
+      "category": "tooling"
+    },
+    {
+      "name": "radix-ui",
+      "category": "components"
+    },
+    {
+      "name": "react",
+      "category": "frontend"
+    },
+    {
+      "name": "react-dom",
+      "category": "frontend"
+    },
+    {
+      "name": "react-router-dom",
+      "category": "routing"
+    },
+    {
+      "name": "redux",
+      "category": "state-management"
+    },
+    {
+      "name": "rxjs",
+      "category": "utility"
+    },
+    {
+      "name": "sass",
+      "category": "styling"
+    },
+    {
+      "name": "semver",
+      "category": "build"
+    },
+    {
+      "name": "shadcn-ui",
+      "category": "components"
+    },
+    {
+      "name": "socket.io",
+      "category": "realtime"
+    },
+    {
+      "name": "socket.io-client",
+      "category": "realtime"
+    },
+    {
+      "name": "solid-js",
+      "category": "frontend"
+    },
+    {
+      "name": "styled-components",
+      "category": "styling"
+    },
+    {
+      "name": "svelte",
+      "category": "frontend"
+    },
+    {
+      "name": "tailwind-merge",
+      "category": "styling"
+    },
+    {
+      "name": "tailwindcss",
+      "category": "styling"
+    },
+    {
+      "name": "three",
+      "category": "3d"
+    },
+    {
+      "name": "tmp",
+      "category": "utility"
+    },
+    {
+      "name": "tslib",
+      "category": "build"
+    },
+    {
+      "name": "typescript",
+      "category": "language"
+    },
+    {
+      "name": "uuid",
+      "category": "utility"
+    },
+    {
+      "name": "vitest",
+      "category": "testing"
+    },
+    {
+      "name": "vue",
+      "category": "frontend"
+    },
+    {
+      "name": "webpack",
+      "category": "build"
+    },
+    {
+      "name": "yargs",
+      "category": "cli"
+    },
+    {
+      "name": "zustand",
+      "category": "state-management"
+    }
+  ],
+  "detections": [
+    {
+      "package": "crossenv",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquat of cross-env, steals environment variables including secrets",
+      "cve": null,
+      "source": "npm incident 2017",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "d3.js",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquat of d3 package, contains credential harvester",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "jquery.js",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "high",
+      "description": "Typosquat of jquery, contains malicious postinstall script",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "discordjs",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "high",
+      "description": "Typosquat of discord.js, contains token logger",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "momen",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "medium",
+      "description": "Typosquat of moment, empty package used for dependency confusion",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "babelcli",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "high",
+      "description": "Typosquat of babel-cli, exfiltrates npm credentials",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "electorn",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquat of electron, installs remote access trojan",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "mongose",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "high",
+      "description": "Typosquat of mongoose, credential harvester",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "expres",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "medium",
+      "description": "Typosquat of express, empty malicious package",
+      "cve": null,
+      "source": "npm security",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "typescriptjs",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering 24MB cross-platform credential stealer via fake CAPTCHA",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "react-router-dom.js",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "dizcordjs",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "deezcord.js",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "dezcord.js",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "etherdjs",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ethesjs",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "ethetsjs",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "nodemonjs",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "zustand.js",
+      "versions": [],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Typosquatted package delivering cross-platform credential stealer",
+      "cve": null,
+      "source": "PhantomRaven 2025",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "graphalgo",
+      "versions": [
+        "2.2.11"
+      ],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Lazarus Group typosquat delivering malicious payload",
+      "cve": null,
+      "source": "ReversingLabs",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "terminalcolor256",
+      "versions": [
+        "2.2.6"
+      ],
+      "reason": "typosquat",
+      "severity": "critical",
+      "description": "Lazarus Group typosquat mimicking terminal utility to deliver malware",
+      "cve": null,
+      "source": "ReversingLabs",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    }
+  ]
+}

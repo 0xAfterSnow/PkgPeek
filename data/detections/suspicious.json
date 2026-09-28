@@ -1,0 +1,56 @@
+{
+  "detections": [
+    {
+      "package": "gxm-reference-web-auth-server",
+      "versions": [],
+      "reason": "dependency confusion",
+      "severity": "high",
+      "description": "Targeted dependency confusion package exfiltrating /etc/hosts and internal configs",
+      "cve": null,
+      "source": "Snyk Research",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "svp-s3-storage",
+      "versions": [
+        "100.100.100"
+      ],
+      "reason": "dependency confusion",
+      "severity": "high",
+      "description": "mr.4nd3r50n namespace squatting package for CI/CD reconnaissance",
+      "cve": null,
+      "source": "Microsoft Threat Intel",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@sber-ecom-core/sberpay-widget",
+      "versions": [],
+      "reason": "dependency confusion",
+      "severity": "high",
+      "description": "Impersonates SberPay payment widget to execute info-gathering postinstall script",
+      "cve": null,
+      "source": "Microsoft Threat Intel",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    },
+    {
+      "package": "@wb-track/shared-front",
+      "versions": [
+        "3.5.22"
+      ],
+      "reason": "dependency confusion",
+      "severity": "high",
+      "description": "ce-rwb namespace squatting package targeting internal frontend platforms",
+      "cve": null,
+      "source": "Microsoft Threat Intel",
+      "source_url": null,
+      "reported_at": null,
+      "contributor": null
+    }
+  ]
+}

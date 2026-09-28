@@ -1,0 +1,94 @@
+{
+  "tools": [
+    {
+      "type": "VS Code",
+      "cls": "tt-vscode",
+      "name": "Snyk Security",
+      "desc": "Real-time vulnerability detection in your editor. Flags CVEs in package.json as you type.",
+      "url": "https://marketplace.visualstudio.com/items?itemName=snyk-security.snyk-vulnerability-scanner",
+      "logo": "/logos/curated/snyk-security-487f695c.svg",
+      "logo_tile": "light",
+      "logo_source": "Simple Icons (CC0)"
+    },
+    {
+      "type": "VS Code",
+      "cls": "tt-vscode",
+      "name": "npm Audit",
+      "desc": "Runs npm audit inline, surfacing vulnerability counts in the VS Code status bar automatically.",
+      "url": "https://marketplace.visualstudio.com/items?itemName=nicusorb.npm-audit",
+      "logo": "/logos/curated/npm-audit-6b58690f.svg",
+      "logo_tile": "light",
+      "logo_source": "Simple Icons (CC0)"
+    },
+    {
+      "type": "VS Code",
+      "cls": "tt-vscode",
+      "name": "OWASP Checker",
+      "desc": "Integrates OWASP's dependency-check tool directly into the VS Code workflow.",
+      "url": "https://owasp.org/www-project-dependency-check/",
+      "logo": "/logos/curated/owasp-checker-b93b94c9.svg",
+      "logo_tile": "light",
+      "logo_source": "Simple Icons (CC0)"
+    },
+    {
+      "type": "CLI Tool",
+      "cls": "tt-cli",
+      "name": "npm audit",
+      "desc": "Built into npm v6+. Run `npm audit` in any project for an instant vulnerability report.",
+      "url": "https://docs.npmjs.com/cli/v10/commands/npm-audit",
+      "logo": "/logos/curated/npm-audit-6b58690f.svg",
+      "logo_tile": "light",
+      "logo_source": "Simple Icons (CC0)"
+    },
+    {
+      "type": "CLI Tool",
+      "cls": "tt-cli",
+      "name": "Snyk CLI",
+      "desc": "`snyk test` scans your project. `snyk monitor` tracks it over time for new advisories.",
+      "url": "https://docs.snyk.io/snyk-cli",
+      "logo": "/logos/curated/snyk-cli-487f695c.svg",
+      "logo_tile": "light",
+      "logo_source": "Simple Icons (CC0)"
+    },
+    {
+      "type": "CLI Tool",
+      "cls": "tt-cli",
+      "name": "Retire.js",
+      "desc": "Detects JavaScript libraries with known vulnerabilities. Works as CLI, Grunt/Gulp plugin, or browser extension.",
+      "url": "https://retirejs.github.io/retire.js/",
+      "logo": "/logos/curated/retire-js-b19f882b.png",
+      "logo_tile": "light",
+      "logo_source": "PkgPeek monogram"
+    },
+    {
+      "type": "CI / CD",
+      "cls": "tt-ci",
+      "name": "Dependabot",
+      "desc": "GitHub-native automated dependency updates and security alerts. Auto-creates PRs for vulnerable packages.",
+      "url": "https://docs.github.com/en/code-security/dependabot",
+      "logo": "/logos/curated/dependabot-98396477.svg",
+      "logo_tile": "light",
+      "logo_source": "Simple Icons (CC0)"
+    },
+    {
+      "type": "CI / CD",
+      "cls": "tt-ci",
+      "name": "Socket Security",
+      "desc": "GitHub app that blocks supply chain attacks by analyzing package behavior before merging a PR.",
+      "url": "https://socket.dev",
+      "logo": "/logos/curated/socket-security-39c5f558.svg",
+      "logo_tile": "light",
+      "logo_source": "Simple Icons (CC0)"
+    },
+    {
+      "type": "Service",
+      "cls": "tt-service",
+      "name": "OSV Database",
+      "desc": "Google's open vulnerability database aggregating advisories from GitHub, PyPI, npm and more.",
+      "url": "https://osv.dev",
+      "logo": "/logos/curated/osv-database-a6eac83e.png",
+      "logo_tile": "light",
+      "logo_source": "PkgPeek monogram"
+    }
+  ]
+}

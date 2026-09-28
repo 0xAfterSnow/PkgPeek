@@ -1,21 +1,25 @@
 {
-  "name": "PkgGuard Scanner",
-  "short_name": "PkgGuard",
-  "description": "npm Supply Chain Security Scanner",
+  "name": "PkgPeek — npm Supply Chain Scanner",
+  "short_name": "PkgPeek",
+  "description": "Scan your npm dependencies for malware, CVEs, typosquats and suspicious publish signals.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f5f5f3",
   "theme_color": "#111110",
+  "categories": ["security", "developer", "utilities"],
   "icons": [
     {
       "src": "/static/favicon.svg",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
       "src": "/static/favicon.svg",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

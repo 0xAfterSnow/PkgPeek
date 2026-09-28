@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Contribute — PkgPeek</title>
+  <meta name="description" content="Add a detection, improve the scanner, or report a false positive. PkgPeek is an open npm supply chain threat database.">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=3) }}">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="nav-wrapper">
+    <nav>
+      <a class="nav-logo" href="/" style="color: var(--ink);">
+        <div class="logo-shield" style="background: var(--ink);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        PkgPeek
+      </a>
+      <div class="nav-links">
+        <a href="/">Scanner</a>
+        <a href="/report">Report a package</a>
+      </div>
+    </nav>
+  </div>
+
+  <main class="page-wrap page-wide">
+    <div class="page-eyebrow">Open dataset · MIT licensed</div>
+    <h1 class="page-title">Help keep the npm ecosystem<br>safer.</h1>
+    <p class="page-lede">
+      PkgPeek's detections live as plain JSON in a public repository. Anyone can
+      add one, and every change goes through review, so a detection is never
+      just somebody's opinion — it is always traceable to evidence.
+    </p>
+
+    <div class="contrib-grid">
+      <div class="contrib-card">
+        <div class="contrib-num">{{ community.total_detections }}</div>
+        <div class="contrib-label">Detections tracked</div>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-num">{{ community.community_detections }}</div>
+        <div class="contrib-label">From community PRs</div>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-num">{{ community.accepted_reports }}</div>
+        <div class="contrib-label">Reports accepted</div>
+      </div>
+      <div class="contrib-card">
+        <div class="contrib-num">{{ community.pending_reports }}</div>
+        <div class="contrib-label">Awaiting review</div>
+      </div>
+    </div>
+
+    <div class="form-card" style="margin-bottom:18px;">
+      <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 8px;">1 · Add a detection</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 14px;">
+        Found a malicious npm package? Report it with evidence. A maintainer
+        verifies the claim and opens a pull request against
+        <code style="font-family:'Geist Mono',monospace;font-size:12px;">data/detections/</code>.
+      </p>
+      <a class="btn-primary" href="/report" style="text-decoration:none;">Submit a report →</a>
+    </div>
+
+    <div class="form-card" style="margin-bottom:18px;">
+      <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 8px;">2 · Improve detection</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 14px;">
+        Have a better way to catch typosquatting, dependency confusion, or
+        suspicious publish patterns? The scanner is four small check functions in
+        <code style="font-family:'Geist Mono',monospace;font-size:12px;">scanner.py</code> —
+        it is a genuinely approachable codebase.
+      </p>
+      <a class="btn-primary" href="https://github.com/0xaftersnow/pkgpeek" target="_blank" rel="noopener" style="text-decoration:none;">Contribute code →</a>
+    </div>
+
+    <div class="form-card" style="margin-bottom:28px;">
+      <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 8px;">3 · Add a test</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 14px;">
+        Found a false positive? A regression test is the best possible fix: it
+        proves the bug existed and stops it coming back. Same flow as a detection.
+      </p>
+      <a class="btn-primary" href="/report?kind=correction" target="_blank" rel="noopener" style="text-decoration:none;">Report a false positive →</a>
+    </div>
+
+    <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 12px;">Where the intelligence comes from</h3>
+    <p style="font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 14px;">
+      CVEs are pulled automatically from OSV.dev and the npm Registry, so the
+      community effort goes into supply chain threats those feeds do not cover.
+    </p>
+    <ul class="source-list">
+      {% for src in community.intelligence_sources %}
+      <li>
+        <span>{{ src.source }}</span>
+        <span class="count">{{ src.n }}</span>
+      </li>
+      {% else %}
+      <li class="empty-inline">No sources recorded yet.</li>
+      {% endfor %}
+    </ul>
+
+    <div style="margin-top:30px;">
+      <h3 style="font-family:'Fraunces',serif;font-size:19px;margin:0 0 12px;">Contributors</h3>
+      {% if community.contributors %}
+      <ul class="source-list">
+        {% for c in community.contributors %}
+        <li><span>{{ c.contributor }}</span><span class="count">{{ c.n }} detection{{ '' if c.n == 1 else 's' }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="notice" style="margin:0;">
+        <strong>Be the first.</strong> The detection dataset is currently built
+        from published advisories and incident reports. Entries contributed
+        through a pull request record your GitHub handle, and you will be
+        credited here and in the entry itself.
+      </div>
+      {% endif %}
+    </div>
+
+    <div style="margin-top:30px;display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="btn-outline" href="https://github.com/0xaftersnow/pkgpeek/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener" style="text-decoration:none;">Read CONTRIBUTING.md</a>
+      <a class="btn-outline" href="https://github.com/0xaftersnow/pkgpeek/issues" target="_blank" rel="noopener" style="text-decoration:none;">Open an issue</a>
+    </div>
+  </main>
+
+  <footer>
+    <div style="text-align:center;color:var(--text-light);font-size:13px;">
+      © {{ year }} PkgPeek · <a href="/">Scanner</a> · <a href="/report">Report a package</a>
+    </div>
+  </footer>
+</body>
+</html>

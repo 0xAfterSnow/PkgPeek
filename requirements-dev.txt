@@ -1,0 +1,9 @@
+# Development and CI dependencies. Install on top of requirements.txt:
+#   pip install -r requirements.txt -r requirements-dev.txt
+-r requirements.txt
+
+pytest==9.0.2
+pytest-cov==7.0.0
+
+# Only needed to regenerate curated tool logos: python tools/generate_logos.py
+pillow>=11.0.0

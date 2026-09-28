@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Listing status — PkgPeek</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=3) }}">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="nav-wrapper">
+    <nav>
+      <a class="nav-logo" href="/" style="color: var(--ink);">
+        <div class="logo-shield" style="background: var(--ink);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        PkgPeek
+      </a>
+      <div class="nav-links"><a href="/">Scanner</a></div>
+    </nav>
+  </div>
+
+  <main class="page-wrap">
+    {% if not submission %}
+      <div class="page-eyebrow">Not found</div>
+      <h1 class="page-title">Listing not found</h1>
+      <p class="page-lede">
+        That tracking link is not valid. If you submitted a listing, check the
+        link in your confirmation, or <a href="/submit-tool">submit it again</a>.
+      </p>
+    {% else %}
+
+    <div class="page-eyebrow">Submission #{{ submission.id }}</div>
+    <h1 class="page-title">{{ submission.tool_name }}</h1>
+
+    <div style="margin-bottom:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span class="status-pill sp-{{ submission.status }}">{{ submission.status.replace('_', ' ') }}</span>
+      <span class="status-pill sp-{{ submission.payment_status }}">payment: {{ submission.payment_status }}</span>
+    </div>
+
+    {% if submission.status == 'pending_payment' %}
+      <div class="notice">
+        <strong>Submission received.</strong><br>
+        Next step: complete the listing payment{% if payment.price %} ({{ payment.price }} for a
+        {{ payment.duration_days }}-day listing){% endif %}.
+      </div>
+      {% if payment.configured and submission.payment_url %}
+      <div style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="btn-primary" href="{{ submission.payment_url }}" target="_blank" rel="noopener" style="text-decoration:none;">
+          Continue to payment →
+        </a>
+        <button class="btn-outline" id="declare-paid" type="button">I've completed payment</button>
+      </div>
+      <div class="field-hint" style="margin:-8px 0 18px;">
+        Clicking this only tells us to expect your listing in the review queue.
+        It is not proof of payment — a maintainer verifies that against our
+        payment provider before anything goes live.
+      </div>
+      <div class="form-error" id="pay-error"></div>
+      {% else %}
+      <div class="notice notice-warn">
+        The payment link is not currently available. Please contact us and we will
+        sort it out.
+      </div>
+      {% endif %}
+    {% elif submission.status == 'pending_review' %}
+      <div class="notice">
+        <strong>Payment submitted.</strong><br>
+        Your listing is now pending review. We'll review the tool before it
+        appears on PkgPeek.<br><br>
+        <span style="color:var(--muted);font-size:12px;">
+          Note: payment is confirmed manually against our payment provider before
+          publication, so this page updates once a maintainer has verified it.
+        </span>
+      </div>
+    {% elif submission.status == 'approved' %}
+      <div class="notice">
+        <strong>Your tool has been approved.</strong><br>
+        It will be published on PkgPeek once payment has been verified.
+      </div>
+    {% elif submission.status == 'published' %}
+      <div class="notice">
+        <strong>Your listing is live.</strong><br>
+        It appears in the PkgPeek tools directory, labelled Sponsored, until
+        <strong>{{ submission.expires_at[:10] }}</strong>.
+      </div>
+    {% elif submission.status == 'rejected' %}
+      <div class="notice notice-warn">
+        <strong>This listing was not accepted.</strong><br>
+        {{ submission.rejection_reason or 'No reason was given.' }}
+      </div>
+    {% elif submission.status == 'expired' %}
+      <div class="notice">
+        <strong>This listing has expired.</strong><br>
+        It is no longer shown in the directory. Get in touch if you'd like to renew it.
+      </div>
+    {% endif %}
+
+    <div class="form-card">
+      <div class="sub-meta">
+        <div><strong>Category</strong><span>{{ submission.category }}</span></div>
+        <div><strong>Website</strong><span>{{ submission.website_url }}</span></div>
+        <div><strong>Pricing</strong><span>{{ submission.pricing_model or '—' }}</span></div>
+        <div><strong>Submitted</strong><span>{{ submission.submitted_at[:10] if submission.submitted_at else '—' }}</span></div>
+        {% if submission.published_at %}
+        <div><strong>Published</strong><span>{{ submission.published_at[:10] }}</span></div>
+        {% endif %}
+        {% if submission.payment_reference %}
+        <div><strong>Payment ref</strong><span>{{ submission.payment_reference }}</span></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <p style="margin-top:22px;font-size:12px;color:var(--muted);line-height:1.6;">
+      Keep this link — it is the only way to check your listing's status. Anyone
+      with it can view this page, so don't share it publicly.
+    </p>
+
+    {% endif %}
+  </main>
+
+  <footer>
+    <div style="text-align:center;color:var(--text-light);font-size:13px;">© {{ year }} PkgPeek</div>
+  </footer>
+
+<script>
+const declareBtn = document.getElementById('declare-paid');
+if (declareBtn) {
+  const errBox = document.getElementById('pay-error');
+  declareBtn.addEventListener('click', async () => {
+    errBox.classList.remove('visible');
+    declareBtn.disabled = true;
+    try {
+      const res = await fetch('/api/listing/{{ submission.public_token }}/declare-paid', {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content }
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Could not update your listing');
+      window.location.reload();
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.classList.add('visible');
+      declareBtn.disabled = false;
+    }
+  });
+}
+</script>
+</body>
+</html>

@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
 
+# No value in indexing, and they are behind auth or a secret token.
+Disallow: /admin
+Disallow: /listing/
+Disallow: /api/
+Disallow: /submit-tool
+
 Sitemap: /sitemap.xml
