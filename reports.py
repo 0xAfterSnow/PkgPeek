@@ -273,24 +273,30 @@ def _file_github_issue(report: dict):
 
     # The body is already fenced and escaped; send it as plain text.
     body = build_issue_body(report).replace("```", "")
+    label = "detection-report" if report["kind"] == "report" else "false-positive"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "pkgpeek",
+    }
+    payload = {"title": issue_title(report), "body": body, "labels": [label]}
+
     try:
         resp = requests.post(
-            f"{GITHUB_API}/repos/{repo}/issues",
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Accept": "application/vnd.github+json",
-                "X-GitHub-Api-Version": "2022-11-28",
-                "User-Agent": "pkgpeek",
-            },
-            json={
-                "title": issue_title(report),
-                "body": body,
-                "labels": [
-                    "detection-report" if report["kind"] == "report" else "false-positive"
-                ],
-            },
-            timeout=TIMEOUT,
+            f"{GITHUB_API}/repos/{repo}/issues", headers=headers, json=payload, timeout=TIMEOUT
         )
+        if resp.status_code == 422:
+            # GitHub rejects the whole request with 422 if a label does not
+            # exist in the repo. Retry unlabelled rather than silently filing
+            # nothing -- a maintainer should not have to pre-create labels.
+            payload = {"title": issue_title(report), "body": body}
+            resp = requests.post(
+                f"{GITHUB_API}/repos/{repo}/issues",
+                headers=headers,
+                json=payload,
+                timeout=TIMEOUT,
+            )
         if resp.status_code not in (200, 201):
             return None
         data = resp.json()

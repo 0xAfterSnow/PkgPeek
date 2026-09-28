@@ -181,3 +181,104 @@ def test_prefilled_issue_url_is_generated_without_a_token():
 
 def test_github_is_reported_as_unconfigured_without_a_token():
     assert reports.github_configured() is False
+
+
+# ── Filing a GitHub issue ─────────────────────────────────────────────────
+class _Resp:
+    def __init__(self, status_code, payload=None):
+        self.status_code = status_code
+        self._payload = payload or {}
+
+    def json(self):
+        return self._payload
+
+
+def test_issue_is_filed_when_a_token_is_configured(monkeypatch):
+    """A report should become a public, auditable issue when configured."""
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_secret")
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    seen = {}
+
+    def post(url, **kwargs):
+        seen["url"] = url
+        seen["auth"] = kwargs["headers"]["Authorization"]
+        seen["payload"] = kwargs["json"]
+        return _Resp(201, {"html_url": "https://github.com/owner/repo/issues/7", "number": 7})
+
+    monkeypatch.setattr("requests.post", post)
+    report = reports.create_report(payload())
+    assert report["github_issue_url"] == "https://github.com/owner/repo/issues/7"
+    assert report["github_issue_number"] == 7
+    assert seen["url"] == "https://api.github.com/repos/owner/repo/issues"
+    assert seen["auth"] == "Bearer ghp_secret"
+    assert seen["payload"]["labels"] == ["detection-report"]
+
+
+def test_false_positive_uses_its_own_label(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_secret")
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    seen = {}
+    monkeypatch.setattr(
+        "requests.post",
+        lambda url, **kw: (seen.update(kw["json"]),
+                          _Resp(201, {"html_url": "u", "number": 1}))[1],
+    )
+    reports.create_report(
+        {"kind": "correction", "packageName": "x", "reason": "wrong"}
+    )
+    assert seen["labels"] == ["false-positive"]
+
+
+def test_missing_labels_do_not_prevent_the_issue(monkeypatch):
+    """GitHub 422s the whole request when a label does not exist. Retry unlabelled."""
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_secret")
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    attempts = []
+
+    def post(url, **kwargs):
+        attempts.append(kwargs["json"])
+        if len(attempts) == 1:
+            return _Resp(422, {"error": "Validation Failed"})
+        return _Resp(201, {"html_url": "https://github.com/owner/repo/issues/8", "number": 8})
+
+    monkeypatch.setattr("requests.post", post)
+    report = reports.create_report(payload())
+    assert report["github_issue_number"] == 8, "issue must still be filed"
+    assert len(attempts) == 2
+    assert "labels" in attempts[0]
+    assert "labels" not in attempts[1], "the retry must drop the label"
+
+
+def test_an_unauthorised_token_does_not_lose_the_report(monkeypatch):
+    """A bad token must never lose the submission -- it is already in the queue."""
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_wrong")
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    monkeypatch.setattr("requests.post", lambda url, **kw: _Resp(401, {"message": "Bad credentials"}))
+    report = reports.create_report(payload())
+    assert report["id"] is not None
+    assert report["status"] == "pending"
+    assert report["github_issue_url"] is None
+
+
+def test_a_github_outage_does_not_lose_the_report(monkeypatch):
+    def boom(*a, **k):
+        raise RuntimeError("network down")
+
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_secret")
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    monkeypatch.setattr("requests.post", boom)
+    report = reports.create_report(payload())
+    assert report["id"] is not None
+    assert report["status"] == "pending"
+
+
+def test_only_one_retry_happens_on_repeated_422(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_secret")
+    monkeypatch.setenv("GITHUB_REPO", "owner/repo")
+    calls = []
+    monkeypatch.setattr(
+        "requests.post",
+        lambda url, **kw: (calls.append(1), _Resp(422, {}))[1],
+    )
+    reports.create_report(payload())
+    assert len(calls) == 2, "must not loop"
