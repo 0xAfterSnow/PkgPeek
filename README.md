@@ -94,6 +94,38 @@ A `Procfile` is included for Render, Railway and Fly.io, and a `Dockerfile` for
 anything container-based. See [`.env.example`](.env.example) for every setting,
 and the [contributing guide](CONTRIBUTING.md) for the full setup.
 
+### The start command is always `python serve.py`
+
+Set the start command to exactly that, on every platform:
+
+```bash
+python serve.py
+```
+
+**Do not put server flags in the platform config.** That is the most common way
+a deploy breaks: a platform with the server set to Uvicorn but a start command
+read from a gunicorn `Procfile` passes gunicorn's `--timeout` to uvicorn, which
+has no such option, and the service exits with
+
+```
+Error: No such option '--timeout'. (Did you mean one of: '--timeout-keep-alive', ...?)
+```
+
+`serve.py` exists to make that impossible. It initialises the database, then
+picks the server and its own flags:
+
+- **Uvicorn + `asgi:app`** when uvicorn is installed. Single process, no
+  `fork()`, so this is the only option on WASM/WASI targets such as Wasmer.
+- **Gunicorn + `wsgi:app`** otherwise, with `--worker-class gthread
+  --threads 4`, which suits the I/O-bound scanning work.
+
+Override with `PKPEEK_SERVER=asgi` or `PKPEEK_SERVER=wsgi` if the automatic
+choice is wrong. `PKPEEK_THREADS` tunes the gunicorn thread count.
+
+On a normal Linux host, install gunicorn. On Wasmer, make sure uvicorn ends up
+installed — its build step does that when its server setting is Uvicorn, or add
+it to the install command explicitly.
+
 ### Container notes
 
 Two things that bite on hosts with a read-only or ephemeral filesystem:

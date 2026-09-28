@@ -144,17 +144,14 @@ def test_dockerfile_needs_no_apt(dockerfile):
 def test_dockerfile_runs_init_before_serving(dockerfile):
     """The schema must exist before the first request.
 
-    Note this must happen at *startup*, not build time: DATABASE_URL is only
-    known at runtime, so a build-time `python database.py` would initialise
-    SQLite and leave the real database empty.
+    The Dockerfile delegates to serve.py, which initialises the database and
+    only then binds the port. Critically this must happen at *startup*, not at
+    build time: DATABASE_URL is only known at runtime, so a build-time
+    `python database.py` would initialise SQLite and leave the real database
+    empty.
     """
-    cmd = dockerfile.split("CMD")[-1]
-    assert "database.py" in cmd, (
-        "the start command must initialise the schema before gunicorn, "
-        "otherwise the first request races a missing table"
-    )
-    assert cmd.index("database.py") < cmd.index("gunicorn"), (
-        "initialisation must come before gunicorn in the start command"
+    assert "serve.py" in dockerfile.split("CMD")[-1], (
+        "the start command should delegate to serve.py"
     )
     assert "RUN python database.py" not in dockerfile, (
         "initialising at build time cannot work: DATABASE_URL is set at runtime"
