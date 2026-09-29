@@ -27,6 +27,41 @@ import logos
 # Set DATABASE_URL in production (e.g. postgresql://user:pass@host/db).
 # Falls back to local SQLite for development.
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
+
+def _database_url_from_parts() -> str:
+    """Compose a URL from discrete DB_* variables, when a host supplies those.
+
+    Wasmer Edge auto-provisions PostgreSQL for an app and injects DB_HOST,
+    DB_PORT, DB_NAME, DB_USERNAME and DB_PASSWORD rather than a single
+    connection URL. Without this, that database would be provisioned and then
+    silently ignored, and the app would quietly fall back to ephemeral SQLite.
+    Heroku and several other hosts use the same convention.
+    """
+    host = os.environ.get("DB_HOST", "").strip()
+    name = os.environ.get("DB_NAME", "").strip()
+    if not host or not name:
+        return ""
+
+    from urllib.parse import quote
+
+    user = os.environ.get("DB_USERNAME", "").strip()
+    password = os.environ.get("DB_PASSWORD", "")
+    port = os.environ.get("DB_PORT", "").strip() or "5432"
+
+    credentials = ""
+    if user:
+        credentials = quote(user, safe="")
+        if password:
+            credentials += ":" + quote(password, safe="")
+        credentials += "@"
+
+    return f"postgresql://{credentials}{host}:{port}/{quote(name, safe='')}"
+
+
+if not DATABASE_URL:
+    DATABASE_URL = _database_url_from_parts()
+
 USE_PG = bool(DATABASE_URL)
 
 DB_PATH = os.environ.get(

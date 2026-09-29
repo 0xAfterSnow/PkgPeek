@@ -4,6 +4,8 @@
 
 pytest==9.0.2
 pytest-cov==7.0.0
+# Used by tests/test_wasmer.py to parse and assert on app.yaml
+pyyaml==6.0.3
 
 # Only needed to regenerate curated tool logos: python tools/generate_logos.py
 pillow>=11.0.0

@@ -143,34 +143,44 @@ is discarded on every redeploy, so set `DATABASE_URL` for anything real.
 
 ### WASM / WASI targets (Wasmer)
 
-Wasmer builds for `wasix_wasm32`, which changes two things:
+`app.yaml` configures the Edge app: it requests a managed **PostgreSQL** database
+and defines an HTTP health check against `/api/stats`. Commit it and Wasmer picks
+it up.
 
-- **No `fork()`.** Gunicorn's `--workers 2` cannot work, so `Procfile` uses
-  `--worker-class gthread --threads 4` instead: one process, four threads. That
-  is the right shape for this app anyway, since a scan blocks on the OSV.dev and
-  npm registry APIs.
-- **Wasmer may pick an ASGI server.** If its build config sets the server to
-  Uvicorn, use the `asgi.py` entry point, which serves the same Flask app over
-  ASGI without adding a hard dependency:
+Three Wasmer-specific behaviours are worth knowing, each of which caused a real
+failure while bringing this app up:
 
-  ```bash
-  pip install uvicorn
-  uvicorn asgi:app --host 0.0.0.0 --port $PORT
-  ```
+**1. The install step runs before the source is copied in.** Wasmer generates its
+own Dockerfile, and no install command may reference a file in the repository:
+`pip install -r requirements.txt` fails, and so do `uv sync` and `uv add`. Set
+the install command in the dashboard (or CI) to fetch over HTTP:
 
-  Uvicorn is deliberately **not** in `requirements.txt`; it is only needed on
-  targets that cannot run a WSGI server.
+```bash
+pip install -r https://raw.githubusercontent.com/0xaftersnow/pkgpeek/main/requirements.txt
+```
 
-Two build details worth knowing, both of which caused real failures here:
+**2. A `pyproject.toml` flips the build to `uv`.** Wasmer detects
+`requirements.txt` **or** `pyproject.toml`; with the latter present it runs
+`uv sync`, which needs a local project file that has not been copied in yet. If
+you set the install command above explicitly this is harmless, but if you would
+rather Wasmer took the pip path, remove `pyproject.toml`. It exists for tooling
+(uv compatibility, pytest config) and for contributors running `uv sync`
+locally; the app does not require it.
 
-- Wasmer runs the install step **before** copying the source in, so
-  `pip install -r requirements.txt` cannot find the file. Either use the
-  committed `Dockerfile`, point the install command at a raw URL, or set
-  `DOCKERFILE = true` in the build config.
-- Wasmer's build runs `uv add`, which **requires a `pyproject.toml`**. One is
-  committed for exactly that reason, with `package = false` so `uv` does not try
-  to build a wheel. Dependencies stay in `requirements.txt`; a test asserts
-  `pyproject.toml` never duplicates them.
+**3. App instances are stateless and ephemeral.** They start on demand and shut
+down after an idle period, so a local SQLite file is discarded on every cold
+start. `app.yaml` therefore requests a Postgres database: Wasmer injects
+`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME` and `DB_PASSWORD`, and PkgPeek
+composes those into a connection URL, so there is no `DATABASE_URL` to set
+yourself. An explicit `DATABASE_URL` still wins if you would rather bring your
+own database.
+
+Do not put a start command in `app.yaml` — see the section above. `python
+serve.py` is the only entry point, and a second one is what produced
+`No such option '--timeout'` in an earlier deploy.
+
+**Network egress** must be enabled: a scan calls OSV.dev and registry.npmjs.org
+on every request.
 
 ### ⚠ Set `DATABASE_URL` before taking paid listings
 

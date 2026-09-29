@@ -1,0 +1,71 @@
+# Wasmer Edge app configuration.
+#
+# Docs: https://docs.wasmer.io/ai-docs/edge/configuration
+#
+# Why this file exists, and the one thing it cannot fix
+# -----------------------------------------------------
+# Wasmer generates its own Dockerfile and runs the install steps *before*
+# copying the repository in. That means no install command may reference a
+# file in the repo: `pip install -r requirements.txt` fails, and so does
+# `uv sync` / `uv add`, which need a local pyproject.toml. The generated steps
+# are not configurable from app.yaml, so the install command has to be changed in
+# the Wasmer dashboard (or CI) to fetch requirements over HTTP:
+#
+#     pip install -r https://raw.githubusercontent.com/0xaftersnow/pkgpeek/main/requirements.txt
+#
+# and the start command set to:
+#
+#     python serve.py
+#
+# serve.py is the only entry point. It initialises the database and then chooses
+# uvicorn or gunicorn itself, because letting the platform pick one and then
+# merge in flags from the other is what produced
+# "No such option '--timeout'" in an earlier deploy.
+
+kind: wasmer.io/App.v0
+owner: 0xaftersnow
+name: pkgpeek
+package: .
+
+description: npm supply chain security scanner
+
+# Edge instances are stateless and ephemeral: started on demand, shut down after
+# an idle period. Nothing may be cached on local disk, and the SQLite fallback
+# is discarded on every cold start -- so a real database is required.
+#
+# Requesting it here makes Wasmer provision PostgreSQL and inject DB_HOST,
+# DB_PORT, DB_NAME, DB_USERNAME and DB_PASSWORD. PkgPeek composes those into a
+# connection URL, so no manual DATABASE_URL is needed.
+capabilities:
+  database:
+    engine: postgres
+
+# Secrets are set in the Wasmer dashboard, never here:
+#   ADMIN_USERNAME, ADMIN_PASSWORD_HASH, SECRET_KEY,
+#   GITHUB_REPO, GITHUB_TOKEN,
+#   BYTESHIP_API_KEY,
+#   DODO_TOOL_LISTING_PAYMENT_URL, TOOL_LISTING_PRICE,
+#   LIMITER_STORAGE_URI (memory:// unless you install the redis package)
+env:
+  # The app is behind TLS at the edge, so the session cookie can be secure.
+  PKPEEK_SECURE_COOKIES: "1"
+  # Only used if DATABASE_URL is somehow absent: a writable path, because the
+  # container filesystem is read-only. Prefer the provisioned Postgres above.
+  PKPEEK_DB_PATH: "/tmp/pkgpeek.db"
+
+# /api/stats is cheap and unauthenticated, and only returns 200 once the
+# database is actually reachable -- so a pass means the app is genuinely serving
+# rather than merely bound to a port.
+health_checks:
+  - http:
+      method: get
+      path: /api/stats
+      interval: 30s
+      timeout: 10s
+      unhealthy_threshold: 3
+      healthy_threshold: 1
+      expected_status_codes:
+        - 200
+
+redirect:
+  force_https: true
